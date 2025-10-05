@@ -1,0 +1,4505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISS Virtual Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0066cc;
+            --secondary-blue: #004499;
+            --accent-orange: #ff6b35;
+            --success-green: #00cc66;
+            --warning-yellow: #ffab00;
+            --error-red: #ff3366;
+            --neutral-gray: #6c757d;
+            --dark-bg: #0a0f1c;
+            --darker-bg: #050810;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b0bec5;
+            --text-muted: #78909c;
+            --shadow-light: rgba(0, 102, 204, 0.2);
+            --shadow-medium: rgba(0, 102, 204, 0.4);
+            --shadow-heavy: rgba(0, 0, 0, 0.6);
+            --gradient-primary: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            --gradient-accent: linear-gradient(135deg, var(--accent-orange), #f7931e);
+            --gradient-success: linear-gradient(135deg, var(--success-green), #00aa55);
+            --border-radius-sm: 8px;
+            --border-radius-md: 16px;
+            --border-radius-lg: 24px;
+            --border-radius-xl: 32px;
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-medium: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(ellipse at center, var(--dark-bg) 0%, var(--darker-bg) 70%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            line-height: 1.6;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Startup Animation Overlay */
+        .startup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, var(--dark-bg) 0%, var(--darker-bg) 70%);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeOut 1s ease-in-out 6s forwards;
+        }
+
+        .startup-overlay.hidden {
+            display: none;
+        }
+
+        /* Spaceship Launch Animation */
+        .spaceship-container {
+            position: relative;
+            width: 200px;
+            height: 400px;
+        }
+
+        .spaceship {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10rem;
+            animation: spaceshipLaunch 5s ease-out forwards;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8));
+        }
+
+        .engine-smoke {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 100px;
+            pointer-events: none;
+        }
+
+        .smoke-particle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.8), rgba(255, 107, 53, 0.2));
+            border-radius: 50%;
+            animation: smokeRise 1.5s ease-out infinite;
+        }
+
+        .smoke-particle:nth-child(1) { animation-delay: 0s; left: 45%; }
+        .smoke-particle:nth-child(2) { animation-delay: 0.2s; left: 50%; }
+        .smoke-particle:nth-child(3) { animation-delay: 0.4s; left: 55%; }
+        .smoke-particle:nth-child(4) { animation-delay: 0.6s; left: 48%; }
+        .smoke-particle:nth-child(5) { animation-delay: 0.8s; left: 52%; }
+
+        .startup-text {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -200px); /* start above view */
+  font-size: 3rem;
+  color: white;
+  opacity: 0;
+  animation: titleDrop 3s ease-out forwards;
+  z-index: 1200; /* above background but below ship if needed */
+}
+
+@keyframes titleDrop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -200px);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0); /* final centered position */
+  }
+}
+
+        .startup-text {
+            position: absolute;
+            bottom: 30px;
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            animation: textFadeIn 2s ease-in-out 2s forwards;
+            opacity: 0;
+        }
+
+        .startup-title {
+            font-size: 3rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .startup-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        @keyframes spaceshipLaunch {
+            0% {
+                transform: translateX(-50%) translateY(0) scale(1);
+                opacity: 1;
+            }
+            70% {
+                transform: translateX(-50%) translateY(-300px) scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-50%) translateY(-600px) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes smokeRise {
+            0% {
+                transform: translateX(-50%) translateY(0) scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateX(-50%) translateY(-40px) scale(1.5);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateX(-50%) translateY(-80px) scale(2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes textFadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Main Application Styles */
+        .container {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            animation: appFadeIn 1s ease-in-out 6s forwards;
+        }
+
+        @keyframes appFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Enhanced Star Field */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .star {
+            position: absolute;
+            background: var(--text-primary);
+            border-radius: 50%;
+            animation: twinkle 4s infinite ease-in-out;
+        }
+
+        .constellation {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary-blue);
+            animation: constellationPulse 6s infinite ease-in-out;
+        }
+
+        .nebula {
+            position: absolute;
+            background: radial-gradient(circle, rgba(0, 102, 204, 0.3) 0%, rgba(0, 102, 204, 0.1) 50%, transparent 100%);
+            border-radius: 50%;
+            animation: nebulaPulse 12s infinite ease-in-out;
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            animation: shoot 8s linear infinite;
+            box-shadow: 0 0 15px var(--primary-blue);
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes constellationPulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.4); }
+        }
+
+        @keyframes nebulaPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        @keyframes shoot {
+            0% { transform: translateX(-200px) translateY(200px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(500px) translateY(-500px); opacity: 0; }
+        }
+
+        /* Professional Header */
+        .header {
+            position: relative;
+            z-index: 100;
+            background: linear-gradient(135deg, rgba(10, 15, 28, 0.95), rgba(5, 8, 16, 0.98));
+            backdrop-filter: blur(40px);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px var(--shadow-heavy);
+            padding: 2rem 0;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            position: relative;
+            margin-right: 1rem;
+        }
+
+        .logo::before {
+            content: '🛰️';
+            position: absolute;
+            left: -4rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2.5rem;
+            animation: satelliteOrbit 20s linear infinite;
+        }
+
+        @keyframes satelliteOrbit {
+            from { transform: translateY(-50%) rotate(0deg); }
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        .version-badge {
+            background: var(--gradient-accent);
+            padding: 0.5rem 1.2rem;
+            border-radius: var(--border-radius-lg);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 16px rgba(255, 107, 53, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .version-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: badgeShine 3s infinite;
+        }
+
+        @keyframes badgeShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .nasa-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 204, 102, 0.1);
+            border: 1px solid var(--success-green);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--success-green);
+            margin-left: 1rem;
+        }
+
+        .nasa-badge::before {
+            content: '🚀';
+            font-size: 1.2rem;
+        }
+
+        /* Mode Selection */
+        .mode-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .mode-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-xl);
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+            transition: all var(--transition-medium);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform var(--transition-medium);
+        }
+
+        .mode-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .mode-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-blue);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px var(--shadow-medium);
+        }
+
+        .mode-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            display: block;
+            animation: modeIconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes modeIconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .mode-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mode-description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 2rem;
+        }
+
+        .mode-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .mode-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .mode-features li::before {
+            content: '✓';
+            color: var(--success-green);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .mode-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            text-decoration: none;
+            box-shadow: 0 4px 16px var(--shadow-light);
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--shadow-medium);
+        }
+
+        /* ISS Cupola Mode */
+        .cupola-mode {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .cupola-mode.active {
+            display: block;
+        }
+
+        .cupola-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(180deg, #000814 0%, #001d3d 50%, #003566 100%);
+            overflow: hidden;
+        }
+
+        .earth-view {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #4a90e2, #2c5aa0, #1a365d);
+            animation: earthRotation 60s linear infinite;
+            box-shadow: 0 0 100px rgba(74, 144, 226, 0.5);
+        }
+
+        @keyframes earthRotation {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .cupola-windows {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .cupola-window {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cupola-window:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-blue);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--shadow-medium);
+        }
+
+        .cupola-window::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: transform var(--transition-slow);
+        }
+
+        .cupola-window:hover::before {
+            transform: rotate(45deg) translate(50%, 50%);
+        }
+
+        .window-content {
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .window-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: windowIconFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes windowIconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .window-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .window-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Weightlessness Demo Mode */
+        .weightlessness-mode {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .weightlessness-mode.active {
+            display: block;
+        }
+
+        .weightlessness-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(180deg, #000814 0%, #001d3d 50%, #003566 100%);
+            overflow: hidden;
+        }
+
+        .weightlessness-interface {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+        }
+
+        .weightless-viewport {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 200px);
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .weightless-object {
+            position: absolute;
+            font-size: 2rem;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.1s ease-out;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+        }
+
+        .weightless-object:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .weightless-object.dragging {
+            z-index: 1000;
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 20px rgba(0, 102, 204, 0.8));
+        }
+
+        /* Satellite Game Mode */
+        .satellite-game-mode {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .satellite-game-mode.active {
+            display: block;
+        }
+
+        .satellite-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #000814 0%, #000000 70%);
+            overflow: hidden;
+        }
+
+        .game-interface {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+        }
+
+        .satellite-viewport {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 200px);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .satellite-player {
+            position: absolute;
+            font-size: 3rem;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s ease-out;
+            filter: drop-shadow(0 0 15px rgba(0, 102, 204, 0.8));
+            z-index: 100;
+        }
+
+        .space-debris {
+            position: absolute;
+            font-size: 1.5rem;
+            animation: debrisFloat 8s linear infinite;
+            filter: drop-shadow(0 0 8px rgba(255, 107, 53, 0.6));
+        }
+
+        .data-point {
+            position: absolute;
+            font-size: 1.2rem;
+            animation: dataPointPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(0, 204, 102, 0.8));
+            cursor: pointer;
+        }
+
+        @keyframes debrisFloat {
+            0% { transform: translateX(-100px) rotate(0deg); }
+            100% { transform: translateX(calc(100vw + 100px)) rotate(360deg); }
+        }
+
+        @keyframes dataPointPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* NBL Training Mode - Enhanced */
+        .nbl-mode {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .nbl-mode.active {
+            display: block;
+        }
+
+        /* Hero Section */
+        .nbl-hero {
+            position: relative;
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="water" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%2387ceeb;stop-opacity:1" /><stop offset="50%" style="stop-color:%234682b4;stop-opacity:1" /><stop offset="100%" style="stop-color:%232e8b57;stop-opacity:1" /></linearGradient></defs><rect width="1200" height="800" fill="url(%23water)"/><g opacity="0.3"><circle cx="200" cy="150" r="3" fill="white"><animate attributeName="opacity" values="0.3;1;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="800" cy="200" r="2" fill="white"><animate attributeName="opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite"/></circle><circle cx="400" cy="300" r="4" fill="white"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="5s" repeatCount="indefinite"/></circle></g></svg>');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .nbl-hero-content {
+            max-width: 800px;
+            padding: 2rem;
+            animation: heroFadeIn 2s ease-out;
+        }
+
+        .nbl-hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff, #87ceeb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .nbl-hero p {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2rem;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+        }
+
+        @keyframes heroFadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* About Section */
+        .nbl-about {
+            padding: 6rem 2rem;
+            background: var(--dark-bg);
+            position: relative;
+        }
+
+        .nbl-about-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .nbl-about-text h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nbl-about-text p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .nbl-facility-image {
+            position: relative;
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: 0 20px 60px var(--shadow-heavy);
+        }
+
+        .nbl-facility-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(135, 206, 235, 0.3), rgba(70, 130, 180, 0.3));
+            z-index: 1;
+        }
+
+        /* Key Facts Section */
+        .nbl-facts {
+            padding: 6rem 2rem;
+            background: var(--darker-bg);
+        }
+
+        .nbl-facts-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .nbl-facts h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .fact-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            transition: all var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fact-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform var(--transition-medium);
+        }
+
+        .fact-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .fact-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px var(--shadow-medium);
+        }
+
+        .fact-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .fact-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-blue);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .fact-label {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Gallery Section */
+        .nbl-gallery {
+            padding: 6rem 2rem;
+            background: var(--dark-bg);
+        }
+
+        .gallery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .gallery-container h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            aspect-ratio: 16/9;
+            background: var(--card-bg);
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 60px var(--shadow-medium);
+        }
+
+        .gallery-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+
+        /* Video Section */
+        .nbl-video {
+            padding: 6rem 2rem;
+            background: var(--darker-bg);
+        }
+
+        .video-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .video-container h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: 0 20px 60px var(--shadow-heavy);
+        }
+
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .video-placeholder:hover {
+            background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+        }
+
+        .video-placeholder .play-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        /* 360° Panoramic View */
+        .nbl-panorama {
+            padding: 6rem 2rem;
+            background: var(--dark-bg);
+        }
+
+        .panorama-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .panorama-container h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .panorama-viewer {
+            height: 500px;
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: 0 20px 60px var(--shadow-heavy);
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            position: relative;
+        }
+
+        .panorama-fallback {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .panorama-fallback .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* Interactive Simulation */
+        .nbl-simulation {
+            padding: 6rem 2rem;
+            background: var(--darker-bg);
+        }
+
+        .simulation-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .simulation-container h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .simulation-interface {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .simulation-controls {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+                padding: 1rem;
+    line-height: 0.86;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .simulation-viewport {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            height: 600px;
+        }
+
+        .underwater-scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(180deg, 
+                rgba(135, 206, 235, 0.8) 0%, 
+                rgba(70, 130, 180, 0.9) 25%, 
+                rgba(46, 139, 87, 0.9) 50%, 
+                rgba(30, 107, 71, 0.9) 75%, 
+                rgba(25, 25, 112, 0.9) 100%);
+        }
+
+        .pool-dimensions {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .astronaut-avatar {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            animation: underwaterFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+            transition: all 0.5s ease-out;
+        }
+
+        @keyframes underwaterFloat {
+            0%, 100% { transform: translate(-50%, -50%) rotate(-2deg); }
+            50% { transform: translate(-50%, -50%) rotate(2deg); }
+        }
+
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+            border-radius: 50%;
+            animation: bubbleRise 4s ease-out infinite;
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateY(-200px) scale(1);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-400px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .physics-info {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .physics-formula {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 1rem 0;
+            text-align: center;
+            color: var(--primary-blue);
+        }
+
+        /* Benefits Section */
+        .nbl-benefits {
+            padding: 6rem 2rem;
+            background: var(--dark-bg);
+        }
+
+        .benefits-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .benefits-container h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .benefit-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem;
+            backdrop-filter: blur(20px);
+            transition: all var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .benefit-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-success);
+            transform: scaleX(0);
+            transition: transform var(--transition-medium);
+        }
+
+        .benefit-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px var(--shadow-medium);
+        }
+
+        .benefit-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .benefit-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .benefit-description {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .control-group {
+            margin-bottom: 2rem;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .control-slider {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-sm);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+
+        .control-value {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .mission-timer {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary-blue);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 1rem;
+        }
+
+        .mission-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-success);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .mission-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 204, 102, 0.4);
+        }
+
+        .mission-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Performance Metrics */
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Back Button */
+        .back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            backdrop-filter: blur(20px);
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .mode-selection {
+                grid-template-columns: 1fr;
+                padding: 2rem 1rem;
+            }
+            
+            .mode-card {
+                padding: 2rem;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .nbl-interface {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .cupola-windows {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                padding: 1rem;
+                gap: 1rem;
+            }
+            
+            .earth-view {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .weightlessness-interface,
+            .game-interface {
+                padding: 1rem;
+            }
+            
+            .weightless-viewport,
+            .satellite-viewport {
+                height: calc(100vh - 300px);
+            }
+            
+            .game-controls {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .control-btn {
+                padding: 0.75rem !important;
+                font-size: 0.9rem;
+            }
+
+            /* NBL Mobile Styles */
+            .nbl-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nbl-hero p {
+                font-size: 1.2rem;
+            }
+            
+            .nbl-about-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .nbl-about-text h2,
+            .nbl-facts h2,
+            .gallery-container h2,
+            .video-container h2,
+            .panorama-container h2,
+            .simulation-container h2,
+            .benefits-container h2 {
+                font-size: 2rem;
+            }
+            
+            .simulation-interface {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .simulation-controls,
+            .physics-info {
+                position: static;
+            }
+            
+            .facts-grid,
+            .gallery-grid,
+            .benefits-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .fact-card,
+            .benefit-card {
+                padding: 2rem;
+            }
+            
+            .panorama-viewer {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cupola-windows {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(7, 1fr);
+            }
+            
+            .startup-title {
+                font-size: 2rem;
+            }
+            
+            .startup-subtitle {
+                font-size: 1rem;
+            }
+
+            .nbl-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .nbl-hero p {
+                font-size: 1rem;
+            }
+            
+            .nbl-about,
+            .nbl-facts,
+            .nbl-gallery,
+            .nbl-video,
+            .nbl-panorama,
+            .nbl-simulation,
+            .nbl-benefits {
+                padding: 4rem 1rem;
+            }
+            
+            .fact-card,
+            .benefit-card {
+                padding: 1.5rem;
+            }
+            
+            .fact-number {
+                font-size: 2rem;
+            }
+            
+            .fact-icon,
+            .benefit-icon {
+                font-size: 2.5rem;
+            }
+        }
+
+             .nbl-mode {
+            display: none;
+            min-height: 100vh;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .nbl-mode.active {
+            display: block;
+        }
+
+        /* Hero Section */
+        .nbl-hero {
+            position: relative;
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><defs><linearGradient id="water" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%2387ceeb;stop-opacity:1" /><stop offset="50%" style="stop-color:%234682b4;stop-opacity:1" /><stop offset="100%" style="stop-color:%232e8b57;stop-opacity:1" /></linearGradient></defs><rect width="1200" height="800" fill="url(%23water)"/><g opacity="0.3"><circle cx="200" cy="150" r="3" fill="white"><animate attributeName="opacity" values="0.3;1;0.3" dur="3s" repeatCount="indefinite"/></circle><circle cx="800" cy="200" r="2" fill="white"><animate attributeName="opacity" values="0.5;1;0.5" dur="4s" repeatCount="indefinite"/></circle><circle cx="400" cy="300" r="4" fill="white"><animate attributeName="opacity" values="0.2;0.8;0.2" dur="5s" repeatCount="indefinite"/></circle></g></svg>');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Enhanced underwater effects */
+        .nbl-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 800px 400px at 20% 30%, rgba(135, 206, 235, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse 600px 300px at 80% 70%, rgba(70, 130, 180, 0.2) 0%, transparent 50%);
+            animation: underwaterCaustics 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes underwaterCaustics {
+            0%, 100% { 
+                transform: translateX(0) translateY(0) scale(1);
+                opacity: 0.6;
+            }
+            25% { 
+                transform: translateX(20px) translateY(-10px) scale(1.1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: translateX(-10px) translateY(15px) scale(0.9);
+                opacity: 0.7;
+            }
+            75% { 
+                transform: translateX(15px) translateY(-5px) scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
+        .nbl-hero-content {
+            max-width: 800px;
+            padding: 2rem;
+            animation: heroFadeIn 2s ease-out;
+            position: relative;
+            z-index: 2;
+        }
+
+        .nbl-hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff, #87ceeb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .nbl-hero p {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Floating particles */
+        .underwater-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: floatUp 6s linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 2rem;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        @keyframes heroFadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+  .nbl-simulation {
+            padding: 6rem 2rem;
+            background: var(--darker-bg);
+        }
+
+        .simulation-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .simulation-container h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            text-align: center;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .simulation-interface {
+            display: grid;
+            grid-template-columns: 350px 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .simulation-controls {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .simulation-viewport {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            height: 700px;
+        }
+
+        .underwater-scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(180deg, 
+                rgba(135, 206, 235, 0.8) 0%, 
+                rgba(70, 130, 180, 0.9) 25%, 
+                rgba(46, 139, 87, 0.9) 50%, 
+                rgba(30, 107, 71, 0.9) 75%, 
+                rgba(25, 25, 112, 0.9) 100%);
+        }
+
+        .pool-dimensions {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            color: white;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .astronaut-avatar {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            animation: underwaterFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+            transition: all 0.5s ease-out;
+        }
+
+        @keyframes underwaterFloat {
+            0%, 100% { transform: translate(-50%, -50%) rotate(-2deg); }
+            50% { transform: translate(-50%, -50%) rotate(2deg); }
+        }
+
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+            border-radius: 50%;
+            animation: bubbleRise 4s ease-out infinite;
+        }
+
+        @keyframes bubbleRise {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0.8;
+            }
+            50% {
+                transform: translateY(-200px) scale(1);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-400px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .physics-info {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 2rem;
+        }
+
+        .physics-formula {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+            font-family: 'JetBrains Mono', monospace;
+            margin: 1rem 0;
+            text-align: center;
+            color: var(--primary-blue);
+        }
+
+        .control-group {
+            margin-bottom: 2rem;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .control-slider {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-sm);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+
+        .control-value {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .mission-timer {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary-blue);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 1rem;
+                margin-top: 10px;
+
+        }
+
+        .mission-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-success);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-medium);
+        }
+
+        .mission-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 204, 102, 0.4);
+        }
+
+        .mission-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Performance Metrics */
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .metric-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Mission Briefing */
+        .mission-briefing {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid var(--accent-orange);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .mission-briefing h4 {
+            color: var(--accent-orange);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .mission-briefing ul {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .mission-briefing li {
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .mission-briefing li::before {
+            content: '⚠️';
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        /* Instability Warning Animation */
+        @keyframes warningPulse {
+            0% { 
+                transform: translate(-50%, -50%) scale(0.8); 
+                opacity: 0; 
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.1); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 1; 
+            }
+        }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .instability-shake {
+            animation: screenShake 0.5s ease-in-out;
+        }
+
+        /* Mission Results */
+        .mission-results {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            backdrop-filter: blur(40px);
+            box-shadow: 0 20px 60px var(--shadow-heavy);
+            text-align: center;
+            z-index: 1000;
+            min-width: 400px;
+        }
+
+        .results-grade {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .results-details {
+            margin-bottom: 2rem;
+        }
+
+        .results-details div {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .results-close {
+            padding: 0.75rem 2rem;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            font-weight: 600;
+        }
+@media (max-width: 768px) {
+            .mode-selection {
+                grid-template-columns: 1fr;
+                padding: 2rem 1rem;
+            }
+            
+            .mode-card {
+                padding: 2rem;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            /* NBL Mobile Styles */
+            .nbl-hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nbl-hero p {
+                font-size: 1.2rem;
+            }
+            
+            .nbl-about-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .nbl-about-text h2,
+            .nbl-facts h2,
+            .simulation-container h2 {
+                font-size: 2rem;
+            }
+            
+            .simulation-interface {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .simulation-controls,
+            .physics-info {
+                position: static;
+            }
+            
+            .facts-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .fact-card {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .startup-title {
+                font-size: 2rem;
+            }
+            
+            .startup-subtitle {
+                font-size: 1rem;
+            }
+
+            .nbl-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .nbl-hero p {
+                font-size: 1rem;
+            }
+            
+            .nbl-about,
+            .nbl-facts,
+            .nbl-simulation {
+                padding: 4rem 1rem;
+            }
+            
+            .fact-card {
+                padding: 1.5rem;
+            }
+            
+            .fact-number {
+                font-size: 2rem;
+            }
+            
+            .fact-icon {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Startup Animation Overlay -->
+    <div class="startup-overlay" id="startupOverlay">
+        <div class="spaceship-container">
+            <div class="spaceship">🚀</div>
+            <div class="engine-smoke">
+                <div class="smoke-particle"></div>
+                <div class="smoke-particle"></div>
+                <div class="smoke-particle"></div>
+                <div class="smoke-particle"></div>
+                <div class="smoke-particle"></div>
+            </div>
+        </div>
+        <div class="startup-text">
+            <div class="startup-title">ISS Virtual Experience</div>
+            <div class="startup-subtitle">NASA Space Experience Platform</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stars" id="stars"></div>
+        
+        <!-- Main Menu -->
+        <div class="main-menu" id="mainMenu">
+            <header class="header">
+                <div class="header-content">
+                    <div class="brand">
+                        <div class="logo">ISS Virtual Experience<span style="all: unset;">🚀</span></div>
+                    </div>
+                    
+                    <div class="subtitle">
+                        Experience Space Through ISS Cupola Views & Neutral Buoyancy Training
+                    </div>
+                    <div style="background: rgba(255, 107, 53, 0.1); border: 1px solid var(--accent-orange); border-radius: var(--border-radius-md); padding: 1.5rem; margin: 2rem auto; max-width: 1000px; text-align: center;">
+                        <h4 style="color: var(--accent-orange); margin-bottom: 1rem; font-size: 1.1rem;">NASA Data & Resources Disclaimer</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+                            NASA does not endorse any non-U.S. Government entity and is not responsible for information contained on non-U.S. Government websites. 
+                            For non-U.S. Government websites, participants must comply with any data use parameters of that specific website.
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                            <a href="https://images.nasa.gov/" target="_blank" rel="noopener noreferrer" style="color: var(--primary-blue); text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; background: rgba(0, 102, 204, 0.1); border-radius: var(--border-radius-sm); border: 1px solid var(--primary-blue);">📸 NASA Image Library</a>
+                            <a href="https://www.flickr.com/photos/nasa-jsc/" target="_blank" rel="noopener noreferrer" style="color: var(--primary-blue); text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; background: rgba(0, 102, 204, 0.1); border-radius: var(--border-radius-sm); border: 1px solid var(--primary-blue);">🏢 JSC Flickr</a>
+                            <a href="https://www.nasa.gov/mission_pages/station/research/" target="_blank" rel="noopener noreferrer" style="color: var(--primary-blue); text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; background: rgba(0, 102, 204, 0.1); border-radius: var(--border-radius-sm); border: 1px solid var(--primary-blue);">🔬 Station Research</a>
+                            <a href="https://data.nasa.gov/" target="_blank" rel="noopener noreferrer" style="color: var(--primary-blue); text-decoration: none; font-size: 0.9rem; padding: 0.5rem 1rem; background: rgba(0, 102, 204, 0.1); border-radius: var(--border-radius-sm); border: 1px solid var(--primary-blue);">📊 Open Data Portal</a>
+                        </div>
+                    </div>
+ <!-- NASA Space Information Section -->
+                    <div style="max-width: 1200px; margin: 3rem auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem;">
+                        <!-- NASA Overview -->
+                        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 2rem; backdrop-filter: blur(20px);">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                <span style="font-size: 2.5rem;">🚀</span>
+                                <h3 style="color: var(--text-primary); font-size: 1.4rem; font-weight: 700;">NASA Space Exploration</h3>
+                            </div>
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                The National Aeronautics and Space Administration (NASA) has been pushing the boundaries of human space exploration since 1958. From the Apollo moon landings to the International Space Station, NASA continues to advance our understanding of space.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                                <div style="text-align: center; padding: 1rem; background: rgba(0, 102, 204, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-blue); font-family: 'JetBrains Mono', monospace;">65+</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Years of Space</div>
+                                </div>
+                                <div style="text-align: center; padding: 1rem; background: rgba(0, 102, 204, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary-blue); font-family: 'JetBrains Mono', monospace;">350+</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Astronauts Trained</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ISS Information -->
+                        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 2rem; backdrop-filter: blur(20px);">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                <span style="font-size: 2.5rem;">🛰️</span>
+                                <h3 style="color: var(--text-primary); font-size: 1.4rem; font-weight: 700;">International Space Station</h3>
+                            </div>
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                The ISS orbits Earth at approximately 408 km altitude, traveling at 28,000 km/h. It serves as a microgravity laboratory where astronauts conduct experiments that benefit life on Earth and prepare for deep space exploration.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                                <div style="text-align: center; padding: 1rem; background: rgba(0, 204, 102, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--success-green); font-family: 'JetBrains Mono', monospace;">24/7</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Continuous Operation</div>
+                                </div>
+                                <div style="text-align: center; padding: 1rem; background: rgba(0, 204, 102, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--success-green); font-family: 'JetBrains Mono', monospace;">23+</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Years in Orbit</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Artemis Program -->
+                        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 2rem; backdrop-filter: blur(20px);">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                <span style="font-size: 2.5rem;">🌙</span>
+                                <h3 style="color: var(--text-primary); font-size: 1.4rem; font-weight: 700;">Artemis Moon Program</h3>
+                            </div>
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                NASA's Artemis program aims to return humans to the Moon by 2026, including the first woman and first person of color. This mission will establish a sustainable lunar presence and prepare for Mars exploration.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                                <div style="text-align: center; padding: 1rem; background: rgba(255, 171, 0, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--warning-yellow); font-family: 'JetBrains Mono', monospace;">2026</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Target Landing</div>
+                                </div>
+                                <div style="text-align: center; padding: 1rem; background: rgba(255, 171, 0, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--warning-yellow); font-family: 'JetBrains Mono', monospace;">4</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Crew Members</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mars Exploration -->
+                        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 2rem; backdrop-filter: blur(20px);">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                <span style="font-size: 2.5rem;">🔴</span>
+                                <h3 style="color: var(--text-primary); font-size: 1.4rem; font-weight: 700;">Mars Exploration</h3>
+                            </div>
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                NASA's Mars exploration program includes rovers like Perseverance and Curiosity, which search for signs of ancient life and collect samples. The goal is to send humans to Mars in the 2030s.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                                <div style="text-align: center; padding: 1rem; background: rgba(255, 51, 102, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--error-red); font-family: 'JetBrains Mono', monospace;">5</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Active Rovers</div>
+                                </div>
+                                <div style="text-align: center; padding: 1rem; background: rgba(255, 51, 102, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--error-red); font-family: 'JetBrains Mono', monospace;">2030s</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Human Mission</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- James Webb Space Telescope -->
+                        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 2rem; backdrop-filter: blur(20px);">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                <span style="font-size: 2.5rem;">🔭</span>
+                                <h3 style="color: var(--text-primary); font-size: 1.4rem; font-weight: 700;">James Webb Space Telescope</h3>
+                            </div>
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                The most powerful space telescope ever built, JWST observes the universe in infrared light from 1.5 million km away at the L2 Lagrange point. It can see galaxies formed just 400 million years after the Big Bang and analyze exoplanet atmospheres.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                                <div style="text-align: center; padding: 1rem; background: rgba(138, 43, 226, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: #8a2be2; font-family: 'JetBrains Mono', monospace;">6.5m</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Mirror Diameter</div>
+                                </div>
+                                <div style="text-align: center; padding: 1rem; background: rgba(138, 43, 226, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: #8a2be2; font-family: 'JetBrains Mono', monospace;">-223°C</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Operating Temp</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Space Launch System (SLS) -->
+                        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 2rem; backdrop-filter: blur(20px);">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                <span style="font-size: 2.5rem;">🚀</span>
+                                <h3 style="color: var(--text-primary); font-size: 1.4rem; font-weight: 700;">Space Launch System (SLS)</h3>
+                            </div>
+                            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                                NASA's most powerful rocket ever built, SLS is designed for deep space missions including Artemis lunar missions and future Mars expeditions. It can deliver 95 metric tons to low Earth orbit and 37 tons to the Moon.
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem;">
+                                <div style="text-align: center; padding: 1rem; background: rgba(255, 140, 0, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: #ff8c00; font-family: 'JetBrains Mono', monospace;">98m</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Rocket Height</div>
+                                </div>
+                                <div style="text-align: center; padding: 1rem; background: rgba(255, 140, 0, 0.1); border-radius: var(--border-radius-md);">
+                                    <div style="font-size: 1.5rem; font-weight: 800; color: #ff8c00; font-family: 'JetBrains Mono', monospace;">8.8M</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Pounds Thrust</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Astronaut Training Highlights -->
+                    <div style="background: linear-gradient(135deg, rgba(0, 102, 204, 0.1), rgba(0, 204, 102, 0.1)); border: 1px solid var(--primary-blue); border-radius: var(--border-radius-lg); padding: 2.5rem; margin: 3rem auto; max-width: 1000px;">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <h3 style="color: var(--text-primary); font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">🧑‍🚀 NASA Astronaut Training</h3>
+                            <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6;">
+                                Becoming a NASA astronaut requires 2+ years of intensive training including survival skills, robotics, spacewalk preparation, and psychological conditioning.
+                            </p>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                            <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏊‍♂️</div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">NBL Training</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">6+ hours underwater EVA practice</div>
+                            </div>
+                            <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🚁</div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">T-38 Flight Training</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">High-performance jet aircraft</div>
+                            </div>
+                            <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌪️</div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Centrifuge Training</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">Up to 9G force simulation</div>
+                            </div>
+                            <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏔️</div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Survival Training</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">Desert, water, winter conditions</div>
+                            </div>
+                            <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Robotics Training</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">Canadarm2 & robotic systems</div>
+                            </div>
+                            <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🧠</div>
+                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Psychology Training</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary);">Isolation & stress management</div>
+                            </div>
+                            <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🛰️</div>
+    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Spacecraft Systems</div>
+    <div style="font-size: 0.9rem; color: var(--text-secondary);">ISS & Orion vehicle operations</div>
+</div>
+
+<div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌌</div>
+    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">Planetary Geology</div>
+    <div style="font-size: 0.9rem; color: var(--text-secondary);">Geology & sample collection for Moon/Mars</div>
+</div>
+                        </div>
+                    </div>
+
+                    <!-- Current Space Missions -->
+                    <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); padding: 2.5rem; margin: 3rem auto; max-width: 1000px; backdrop-filter: blur(20px);">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <h3 style="color: var(--text-primary); font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">🌌 Current NASA Missions</h3>
+                            <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6;">
+                                NASA operates dozens of active missions exploring our solar system and beyond, from Earth observation to deep space exploration.
+                            </p>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                            <div style="padding: 1.5rem; background: rgba(135, 206, 235, 0.1); border-radius: var(--border-radius-md); border: 1px solid rgba(135, 206, 235, 0.3);">
+                                <div style="font-size: 1.8rem; margin-bottom: 1rem;">🛰️</div>
+                                <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 0.5rem;">James Webb Space Telescope</h4>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">Observing the most distant galaxies and exoplanets with unprecedented detail</p>
+                            </div>
+                            <div style="padding: 1.5rem; background: rgba(255, 107, 53, 0.1); border-radius: var(--border-radius-md); border: 1px solid rgba(255, 107, 53, 0.3);">
+                                <div style="font-size: 1.8rem; margin-bottom: 1rem;">🚁</div>
+                                <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 0.5rem;">Mars Ingenuity Helicopter</h4>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">First powered flight on another planet, scouting for Perseverance rover</p>
+                            </div>
+                            <div style="padding: 1.5rem; background: rgba(0, 204, 102, 0.1); border-radius: var(--border-radius-md); border: 1px solid rgba(0, 204, 102, 0.3);">
+                                <div style="font-size: 1.8rem; margin-bottom: 1rem;">🌍</div>
+                                <h4 style="color: var(--text-primary); font-weight: 700; margin-bottom: 0.5rem;">Earth Observation Satellites</h4>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">Monitoring climate change, weather patterns, and natural disasters</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                </div>
+            </header>
+
+            <div class="mode-selection">
+                <div class="mode-card" >
+                    <span class="mode-icon">🔭</span>
+                    <h2 class="mode-title">ISS Cupola Experience</h2>
+                    <p class="mode-description">
+                        Step into the ISS Cupola and witness Earth from space through 7 interactive windows. 
+                        Experience real NASA imagery with AI-generated impact stories.
+                    </p>
+                    <ul class="mode-features">
+                        <li>3D ISS Cupola with interactive windows</li>
+                        <li>Real NASA Image Library integration</li>
+                        <li>Live Earth rotation visualization</li>
+                        <li>Microgravity floating animations</li>
+                        <li>AI-generated impact stories</li>
+                        <li>Real-time ISS trajectory tracking</li>
+                    </ul>
+                    <button class="mode-btn">
+                        <span>🛰️</span>
+                        <span><a href="./cupola.html" style="font-weight:bold; color:white; text-decoration:none;" >Enter Cupola</a></span>
+                    </button>
+                </div>
+
+                <div class="mode-card" onclick="enterNBLMode()">
+                    <span class="mode-icon">🏊‍♂️</span>
+                    <h2 class="mode-title">Neutral Buoyancy Lab</h2>
+                    <p class="mode-description">
+                        Train like a real astronaut in our physics-based underwater simulation. 
+                        Master buoyancy control and complete timed spacewalk tasks.
+                    </p>
+                    <ul class="mode-features">
+                        <li>Physics-based underwater simulation</li>
+                        <li>Realistic buoyancy control system</li>
+                        <li>90-second timed training missions</li>
+                        <li>Bubble particle effects & caustics</li>
+                        <li>Performance vs. real astronaut metrics</li>
+                        <li>Success/failure animations</li>
+                    </ul>
+                    <button class="mode-btn">
+                        <span>🧑‍🚀</span>
+                        <span>Start Training</span>
+                    </button>
+                </div>
+
+                <div class="mode-card" onclick="enterWeightlessnessDemo()">
+                    <span class="mode-icon">🌌</span>
+                    <h2 class="mode-title">Weightlessness Demo</h2>
+                    <p class="mode-description">
+                        Experience real microgravity physics! Drag and release objects to see how they behave in zero gravity conditions aboard the ISS.
+                    </p>
+                    <ul class="mode-features">
+                        <li>Interactive weightlessness simulation</li>
+                        <li>Drag and drop space objects</li>
+                        <li>Real microgravity physics</li>
+                        <li>Educational space environment</li>
+                        <li>Multiple floating objects</li>
+                        <li>Realistic momentum conservation</li>
+                    </ul>
+                    <button class="mode-btn">
+                        <span>🪐</span>
+                        <span>Try Weightlessness</span>
+                    </button>
+                </div>
+
+                <div class="mode-card" onclick="enterSatelliteGame()">
+                    <span class="mode-icon">🛰️</span>
+                    <h2 class="mode-title">Satellite Mission Control</h2>
+                    <p class="mode-description">
+                        Command real satellite missions! Navigate through space debris, maintain orbital trajectories, and complete critical space operations.
+                    </p>
+                    <ul class="mode-features">
+                        <li>Real-time satellite control</li>
+                        <li>Orbital mechanics simulation</li>
+                        <li>Space debris navigation</li>
+                        <li>Mission objectives & scoring</li>
+                        <li>Realistic space physics</li>
+                        <li>Multiple satellite types</li>
+                    </ul>
+                    <button class="mode-btn">
+                        <span>🎮</span>
+                        <span>Launch Mission</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ISS Cupola Mode -->
+        <div class="cupola-mode" id="cupolaMode">
+            <a href="#" class="back-btn" onclick="returnToMenu()">
+                <span>←</span>
+                <span>Back to Menu</span>
+            </a>
+            
+            <div class="cupola-container">
+                <div class="earth-view" id="earthView"></div>
+                
+                <div class="cupola-windows">
+                    <div class="cupola-window" onclick="viewWindow('climate')">
+                        <div class="window-content">
+                            <span class="window-icon">🌍</span>
+                            <div class="window-title">Climate Monitoring</div>
+                            <div class="window-subtitle">Global environmental tracking</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cupola-window" onclick="viewWindow('aurora')">
+                        <div class="window-content">
+                            <span class="window-icon">✨</span>
+                            <div class="window-title">Aurora Research</div>
+                            <div class="window-subtitle">Magnetosphere analysis</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cupola-window" onclick="viewWindow('disaster')">
+                        <div class="window-content">
+                            <span class="window-icon">🌀</span>
+                            <div class="window-title">Disaster Response</div>
+                            <div class="window-subtitle">Emergency monitoring</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cupola-window" onclick="viewWindow('urban')">
+                        <div class="window-content">
+                            <span class="window-icon">🏙️</span>
+                            <div class="window-title">Urban Development</div>
+                            <div class="window-subtitle">City growth analysis</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cupola-window" onclick="viewWindow('ocean')">
+                        <div class="window-content">
+                            <span class="window-icon">🌊</span>
+                            <div class="window-title">Ocean Monitoring</div>
+                            <div class="window-subtitle">Marine ecosystem health</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cupola-window" onclick="viewWindow('space')">
+                        <div class="window-content">
+                            <span class="window-icon">☀️</span>
+                            <div class="window-title">Space Weather</div>
+                            <div class="window-subtitle">Solar activity tracking</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cupola-window" onclick="viewWindow('research')">
+                        <div class="window-content">
+                            <span class="window-icon">🔬</span>
+                            <div class="window-title">Scientific Research</div>
+                            <div class="window-subtitle">Microgravity experiments</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weightlessness Demo Mode -->
+        <div class="weightlessness-mode" id="weightlessnessMode">
+            <a href="#" class="back-btn" onclick="returnToMenu()">
+                <span>←</span>
+                <span>Back to Menu</span>
+            </a>
+            
+            <div class="weightlessness-container">
+                <div class="weightlessness-interface">
+                    <div class="demo-header">
+                        <h2 style="color: var(--text-primary); text-align: center; margin-bottom: 1rem;">Microgravity Physics Demonstration</h2>
+                        <p style="color: var(--text-secondary); text-align: center; margin-bottom: 2rem;">Click to spawn objects, drag them around, and release to see weightless behavior!</p>
+                    </div>
+                    
+                    <div class="weightless-viewport" id="weightlessViewport">
+                        <div class="instructions" style="position: absolute; top: 20px; left: 20px; background: var(--card-bg); padding: 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); backdrop-filter: blur(20px);">
+                            <h4 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Controls:</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">• Click anywhere to spawn objects</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">• Drag objects to move them</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">• Release to see weightless drift</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">• Objects bounce off walls</p>
+                        </div>
+                        
+                        <div class="object-counter" style="position: absolute; top: 20px; right: 20px; background: var(--card-bg); padding: 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); backdrop-filter: blur(20px); text-align: center;">
+                            <div style="color: var(--primary-blue); font-size: 1.5rem; font-weight: 700;" id="objectCount">0</div>
+                            <div style="color: var(--text-muted); font-size: 0.8rem;">Objects</div>
+                            <button onclick="clearAllObjects()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: var(--gradient-accent); border: none; border-radius: var(--border-radius-sm); color: white; cursor: pointer; font-size: 0.8rem;">Clear All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Satellite Game Mode -->
+        <div class="satellite-game-mode" id="satelliteGameMode">
+            <a href="#" class="back-btn" onclick="returnToMenu()">
+                <span>←</span>
+                <span>Back to Menu</span>
+            </a>
+            
+            <div class="satellite-container">
+                <div class="game-interface">
+                    <div class="game-header">
+                        <h2 style="color: var(--text-primary); text-align: center; margin-bottom: 1rem;">Satellite Mission Control</h2>
+                        <div class="game-stats" style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem;">
+                            <div style="text-align: center;">
+                                <div style="color: var(--primary-blue); font-size: 1.5rem; font-weight: 700;" id="gameScore">0</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem;">Score</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--success-green); font-size: 1.5rem; font-weight: 700;" id="gameLevel">1</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem;">Level</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="color: var(--warning-yellow); font-size: 1.5rem; font-weight: 700;" id="gameHealth">100</div>
+                                <div style="color: var(--text-muted); font-size: 0.8rem;">Health</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="satellite-viewport" id="satelliteViewport">
+                        <div class="satellite-player" id="satellitePlayer">🛰️</div>
+                        <div class="game-controls" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 1rem;">
+                            <button class="control-btn" onmousedown="startMoving('left')" onmouseup="stopMoving()" style="padding: 1rem; background: var(--gradient-primary); border: none; border-radius: var(--border-radius-md); color: white; cursor: pointer;">← Left</button>
+                            <button class="control-btn" onmousedown="startMoving('up')" onmouseup="stopMoving()" style="padding: 1rem; background: var(--gradient-primary); border: none; border-radius: var(--border-radius-md); color: white; cursor: pointer;">↑ Up</button>
+                            <button class="control-btn" onmousedown="startMoving('down')" onmouseup="stopMoving()" style="padding: 1rem; background: var(--gradient-primary); border: none; border-radius: var(--border-radius-md); color: white; cursor: pointer;">↓ Down</button>
+                            <button class="control-btn" onmousedown="startMoving('right')" onmouseup="stopMoving()" style="padding: 1rem; background: var(--gradient-primary); border: none; border-radius: var(--border-radius-md); color: white; cursor: pointer;">→ Right</button>
+                        </div>
+                        
+                        <div class="mission-objective" style="position: absolute; top: 20px; left: 20px; background: var(--card-bg); padding: 1rem; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); backdrop-filter: blur(20px);">
+                            <h4 style="color: var(--success-green); margin-bottom: 0.5rem;">Mission Objective:</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;" id="missionText">Navigate through space debris and collect data points</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NBL Training Mode - Enhanced -->
+        <div class="nbl-mode" id="nblMode">
+            <a href="#" class="back-btn" onclick="returnToMenu()">
+                <span>←</span>
+                <span>Back to Menu</span>
+            </a>
+            
+            <!-- Hero Section -->
+            <section class="nbl-hero">
+                <div class="nbl-hero-content">
+                    <h1>Neutral Buoyancy Laboratory</h1>
+                    <p>Training astronauts underwater for spacewalks at NASA's Johnson Space Center</p>
+                </div>
+                <div class="scroll-indicator" onclick="scrollToSection('nbl-about')">↓</div>
+            </section>
+
+            <!-- About Section -->
+            <section class="nbl-about" id="nbl-about">
+                <div class="nbl-about-content">
+                    <div class="nbl-about-text">
+                        <h2>About the NBL</h2>
+                        <p>The Neutral Buoyancy Laboratory is part of the <strong>Sonny Carter Training Facility</strong> at NASA's Johnson Space Center in Houston, Texas. This massive underwater training facility has been preparing astronauts for spacewalks since 1997.</p>
+                        <p>While astronauts in the NBL aim for neutral buoyancy, they are <strong>not truly weightless</strong> in the water - they still feel weight in their suits, and water drag affects movement differently than the vacuum of space.</p>
+                        <p>The NBL supports mission planning, procedure development, hardware verification, astronaut training, and refinement of time-critical operations for EVAs (spacewalks).</p>
+                    </div>
+                    <div class="nbl-facility-image">
+                        <div class="gallery-placeholder">🏊‍♂️</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Facts Section -->
+            <section class="nbl-facts">
+                <div class="nbl-facts-container">
+                    <h2>Key Facts & Specifications</h2>
+                    <div class="facts-grid">
+                        <div class="fact-card">
+                            <span class="fact-icon">📏</span>
+                            <div class="fact-number">202×102×40</div>
+                            <div class="fact-label">Pool Dimensions (ft)</div>
+                        </div>
+                        <div class="fact-card">
+                            <span class="fact-icon">💧</span>
+                            <div class="fact-number">6.2M</div>
+                            <div class="fact-label">Gallons of Water</div>
+                        </div>
+                        <div class="fact-card">
+                            <span class="fact-icon">🌡️</span>
+                            <div class="fact-number">84-86°F</div>
+                            <div class="fact-label">Water Temperature</div>
+                        </div>
+                        <div class="fact-card">
+                            <span class="fact-icon">🏗️</span>
+                            <div class="fact-number">1997</div>
+                            <div class="fact-label">Year Dedicated</div>
+                        </div>
+                        <div class="fact-card">
+                            <span class="fact-icon">🛰️</span>
+                            <div class="fact-number">350×240</div>
+                            <div class="fact-label">ISS Size (ft) - Too Big!</div>
+                        </div>
+                        <div class="fact-card">
+                            <span class="fact-icon">🧑‍🚀</span>
+                            <div class="fact-number">1995</div>
+                            <div class="fact-label">Construction Started</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gallery Section -->
+           
+
+            <!-- Video Section -->
+           
+
+            <!-- 360° Panoramic View -->
+            
+            <!-- Interactive Simulation -->
+            <!-- <section class="nbl-simulation">
+                <div class="simulation-container">
+                    <h2>Interactive Buoyancy Simulation</h2>
+                    <div class="simulation-interface">
+                        <div class="simulation-controls">
+                            <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; text-align: center;">Buoyancy Controls</h3>
+                            
+                            <div class="control-group">
+                                <label class="control-label">Primary Ballast (kg)</label>
+                                <input type="range" class="control-slider" id="ballastSlider" min="-20" max="20" value="0" oninput="updateBallast(this.value)">
+                                <div class="control-value" id="ballastValue">0 kg</div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label class="control-label">Fine Control</label>
+                                <input type="range" class="control-slider" id="fineSlider" min="-3" max="3" step="0.1" value="0" oninput="updateFine(this.value)">
+                                <div class="control-value" id="fineValue">0.0</div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label class="control-label">Trim Adjustment</label>
+                                <input type="range" class="control-slider" id="trimSlider" min="-1" max="1" step="0.05" value="0" oninput="updateTrim(this.value)">
+                                <div class="control-value" id="trimValue">0.00</div>
+                            </div>
+                            
+                            <div class="performance-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value" id="buoyancyStatus">Negative</div>
+                                    <div class="metric-label">Buoyancy</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value" id="stabilityIndex">0.0</div>
+                                    <div class="metric-label">Stability</div>
+                                </div>
+                            </div>
+
+                            <div class="mission-timer">
+                                <div class="timer-display" id="missionTimer">90</div>
+                                <button class="mission-btn" id="startMission" onclick="startMission()">Start Mission</button>
+                            </div>
+                            
+                            <div class="performance-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value" id="missionScore">0%</div>
+                                    <div class="metric-label">Score</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value" id="astronautRatio">0:1</div>
+                                    <div class="metric-label">vs Astronaut</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="simulation-viewport">
+                            <div class="underwater-scene" id="underwaterScene">
+                                <div class="pool-dimensions">
+                                    <div>NBL Pool Dimensions</div>
+                                    <div>202ft × 102ft × 40ft</div>
+                                    <div>6.2 Million Gallons</div>
+                                    <div>Temperature: 84-86°F</div>
+                                </div>
+                                <div class="astronaut-avatar" id="astronautAvatar">🧑‍🚀</div>
+                            </div>
+                        </div>
+                        
+                        <div class="physics-info">
+                            <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Physics Principles</h4>
+                            <div class="physics-formula">
+                                Buoyancy = ρ × V × g
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
+                                Where ρ is fluid density, V is displaced volume, and g is gravitational acceleration.
+                            </p>
+                            
+                            <h5 style="color: var(--primary-blue); margin-bottom: 0.5rem;">Key Differences from Space:</h5>
+                            <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                                <li>• Water drag affects movement</li>
+                                <li>• Suit weight still felt</li>
+                                <li>• Buoyancy ≠ true weightlessness</li>
+                                <li>• Training approximation only</li>
+                            </ul>
+
+                            <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Mission Objectives</h4>
+                                <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
+                                    <li>• Achieve neutral buoyancy</li>
+                                    <li>• Maintain stability for 30 seconds</li>
+                                    <li>• Complete simulated EVA task</li>
+                                    <li>• Beat astronaut training time</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section> -->
+<section class="nbl-simulation" id="nbl-simulation">
+                <div class="simulation-container">
+                    <h2>Enhanced Buoyancy Training Simulation</h2>
+                    <div class="simulation-interface">
+                        <div class="simulation-controls">
+                            <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; text-align: center;">Mission Control</h3>
+                            
+                            <!-- <div class="mission-briefing">
+                                <h4>🎯 Mission Briefing</h4>
+                                <ul>
+                                    <li>Achieve neutral buoyancy (green status)</li>
+                                    <li>Handle automatic instabilities every 1.5 seconds</li>
+                                    <li>Maintain stability for maximum time</li>
+                                    <li>Complete 90-second training mission</li>
+                                    <li>Achieve 70%+ stability for mission success</li>
+                                </ul>
+                            </div> -->
+                            
+                            <div class="control-group">
+                                <label class="control-label">Primary Ballast (kg)</label>
+                                <input type="range" class="control-slider" id="ballastSlider" min="-20" max="20" value="0" oninput="updateBallast(this.value)">
+                                <div class="control-value" id="ballastValue">0 kg</div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label class="control-label">Fine Control</label>
+                                <input type="range" class="control-slider" id="fineSlider" min="-3" max="3" step="0.1" value="0" oninput="updateFine(this.value)">
+                                <div class="control-value" id="fineValue">0.0</div>
+                            </div>
+                            
+                            <div class="control-group">
+                                <label class="control-label">Trim Adjustment</label>
+                                <input type="range" class="control-slider" id="trimSlider" min="-1" max="1" step="0.05" value="0" oninput="updateTrim(this.value)">
+                                <div class="control-value" id="trimValue">0.00</div>
+                            </div>
+                            
+                            <div class="performance-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value" id="buoyancyStatus">Negative</div>
+                                    <div class="metric-label">Buoyancy</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value" id="stabilityIndex">0.0</div>
+                                    <div class="metric-label">Stability</div>
+                                </div>
+                            </div>
+
+                            <div class="mission-timer">
+                                <div class="timer-display" id="missionTimer">90</div>
+                                <button class="mission-btn" id="startMission" onclick="startMission()">Start Mission</button>
+                            </div>
+                            
+                            <div class="performance-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value" id="stabilityTime">0%</div>
+                                    <div class="metric-label">Stability Time</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value" id="instabilitiesHandled">0</div>
+                                    <div class="metric-label">Instabilities</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="simulation-viewport">
+                            <div class="underwater-scene" id="underwaterScene">
+                                <div class="pool-dimensions">
+                                    <div>NBL Pool Dimensions</div>
+                                    <div>202ft × 102ft × 40ft</div>
+                                    <div>6.2 Million Gallons</div>
+                                    <div>Temperature: 84-86°F</div>
+                                </div>
+                                <div class="astronaut-avatar" id="astronautAvatar">🧑‍🚀</div>
+                            </div>
+                        </div>
+                        
+                        <div class="physics-info">
+                            <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Real-Time Physics</h4>
+                            <div class="physics-formula">
+                                Buoyancy = ρ × V × g
+                            </div>
+                            
+                            <div class="performance-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value" id="buoyantForce">0.0N</div>
+                                    <div class="metric-label">Buoyant Force</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value" id="weightForce">0.0N</div>
+                                    <div class="metric-label">Weight Force</div>
+                                </div>
+                            </div>
+                            
+                            <div class="performance-metrics">
+                                <div class="metric-item">
+                                    <div class="metric-value" id="netForce">0.0N</div>
+                                    <div class="metric-label">Net Force</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value" id="acceleration">0.0</div>
+                                    <div class="metric-label">Acceleration</div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                                <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Training Challenge</h4>
+                                <ul style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; list-style: none; padding: 0;">
+                                    <li style="margin-bottom: 0.5rem;">⚠️ Automatic instability every 1.5s</li>
+                                    <li style="margin-bottom: 0.5rem;">🎯 Maintain neutral buoyancy</li>
+                                    <li style="margin-bottom: 0.5rem;">⏱️ 90-second mission duration</li>
+                                    <li style="margin-bottom: 0.5rem;">📊 Real-time performance tracking</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Benefits to Earth -->
+            <section class="nbl-benefits">
+                <div class="benefits-container">
+                    <h2>Benefits to Earth</h2>
+                    <div class="benefits-grid">
+                        <div class="benefit-card">
+                            <span class="benefit-icon">🤖</span>
+                            <div class="benefit-title">Robotics Development</div>
+                            <div class="benefit-description">
+                                Underwater robotics and remote operation technologies developed for NBL training have applications in deep-sea exploration, underwater construction, and marine research.
+                            </div>
+                        </div>
+                        <div class="benefit-card">
+                            <span class="benefit-icon">🔧</span>
+                            <div class="benefit-title">Hardware Testing</div>
+                            <div class="benefit-description">
+                                Tools and equipment tested in the NBL's controlled environment lead to improvements in underwater construction, offshore energy, and marine engineering applications.
+                            </div>
+                        </div>
+                        <div class="benefit-card">
+                            <span class="benefit-icon">🌊</span>
+                            <div class="benefit-title">Underwater Technology</div>
+                            <div class="benefit-description">
+                                Life support systems, communication technologies, and safety protocols developed for NBL operations benefit commercial diving, submarine operations, and ocean research.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // TypeScript-style JavaScript Implementation
+        class HorizonHoverApp {
+            constructor() {
+                this.currentMode = 'menu';
+                this.nblData = {
+                    ballast: 0,
+                    fine: 0,
+                    trim: 0,
+                    timer: 90,
+                    isActive: false,
+                    score: 0,
+                    startTime: null
+                };
+                this.weightlessObjects = [];
+                this.satelliteGame = {
+                    score: 0,
+                    level: 1,
+                    health: 100,
+                    playerX: 50,
+                    playerY: 50,
+                    debris: [],
+                    dataPoints: [],
+                    isActive: false,
+                    moveDirection: null
+                };
+                this.bubbleInterval = null;
+                this.gameInterval = null;
+                this.init();
+            }
+
+            init() {
+                this.createStarField();
+                this.startStartupAnimation();
+                this.bindEvents();
+                console.log('🚀 Horizon & Hover - NASA TypeScript Edition Initialized');
+            }
+
+            startStartupAnimation() {
+                // Hide startup overlay after animation completes
+                setTimeout(() => {
+                    const overlay = document.getElementById('startupOverlay');
+                    if (overlay) {
+                        overlay.classList.add('hidden');
+                    }
+                }, 7000);
+            }
+
+            createStarField() {
+                const starsContainer = document.getElementById('stars');
+                if (!starsContainer) return;
+                
+                starsContainer.innerHTML = '';
+
+                // Create regular stars
+                for (let i = 0; i < 200; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.top = Math.random() * 100 + '%';
+                    star.style.width = star.style.height = Math.random() * 3 + 1 + 'px';
+                    star.style.animationDelay = Math.random() * 4 + 's';
+                    starsContainer.appendChild(star);
+                }
+
+                // Create constellation stars
+                for (let i = 0; i < 20; i++) {
+                    const constellation = document.createElement('div');
+                    constellation.className = 'constellation';
+                    constellation.style.left = Math.random() * 100 + '%';
+                    constellation.style.top = Math.random() * 100 + '%';
+                    constellation.style.animationDelay = Math.random() * 6 + 's';
+                    starsContainer.appendChild(constellation);
+                }
+
+                // Create nebulae
+                for (let i = 0; i < 5; i++) {
+                    const nebula = document.createElement('div');
+                    nebula.className = 'nebula';
+                    nebula.style.left = Math.random() * 100 + '%';
+                    nebula.style.top = Math.random() * 100 + '%';
+                    nebula.style.width = nebula.style.height = (Math.random() * 200 + 150) + 'px';
+                    nebula.style.animationDelay = Math.random() * 12 + 's';
+                    starsContainer.appendChild(nebula);
+                }
+
+                // Create shooting stars
+                for (let i = 0; i < 4; i++) {
+                    const shootingStar = document.createElement('div');
+                    shootingStar.className = 'shooting-star';
+                    shootingStar.style.left = Math.random() * 100 + '%';
+                    shootingStar.style.top = Math.random() * 100 + '%';
+                    shootingStar.style.animationDelay = Math.random() * 25 + 's';
+                    starsContainer.appendChild(shootingStar);
+                }
+            }
+bindEvents() {
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') this.returnToMenu();
+        if (e.key === '1' && this.currentMode === 'menu') this.enterCupolaMode();
+        if (e.key === '2' && this.currentMode === 'menu') this.enterNBLMode();
+
+        // Satellite game controls
+        if (this.currentMode === 'satellite') {
+            switch (e.key) {
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    this.satelliteGame.moveDirection = 'left';
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    this.satelliteGame.moveDirection = 'right';
+                    break;
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    this.satelliteGame.moveDirection = 'up';
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    this.satelliteGame.moveDirection = 'down';
+                    break;
+            }
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (this.currentMode === 'satellite') {
+            // Stop movement when key is released
+            this.satelliteGame.moveDirection = null;
+        }
+    });
+
+    // Prevent default link behavior
+    document.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A' && e.target.getAttribute('href') === '#') {
+            e.preventDefault();
+        }
+    });
+}
+
+            // bindEvents() {
+            //     // Keyboard shortcuts
+            //     document.addEventListener('keydown', (e) => {
+            //         if (e.key === 'Escape') this.returnToMenu();
+            //         if (e.key === '1' && this.currentMode === 'menu') this.enterCupolaMode();
+            //         if (e.key === '2' && this.currentMode === 'menu') this.enterNBLMode();
+            //     });
+
+            //     // Prevent default link behavior
+            //     document.addEventListener('click', (e) => {
+            //         if (e.target.tagName === 'A' && e.target.getAttribute('href') === '#') {
+            //             e.preventDefault();
+            //         }
+            //     });
+            // }
+
+            enterCupolaMode() {
+                this.currentMode = 'cupola';
+                document.getElementById('mainMenu').style.display = 'none';
+                document.getElementById('cupolaMode').classList.add('active');
+                this.startEarthRotation();
+            }
+
+            enterNBLMode() {
+                this.currentMode = 'nbl';
+                document.getElementById('mainMenu').style.display = 'none';
+                document.getElementById('nblMode').classList.add('active');
+                this.startBubbleSystem();
+                this.updateBuoyancy();
+            }
+
+            enterWeightlessnessDemo() {
+                this.currentMode = 'weightlessness';
+                document.getElementById('mainMenu').style.display = 'none';
+                document.getElementById('weightlessnessMode').classList.add('active');
+                this.initWeightlessnessDemo();
+            }
+
+            enterSatelliteGame() {
+                this.currentMode = 'satellite';
+                document.getElementById('mainMenu').style.display = 'none';
+                document.getElementById('satelliteGameMode').classList.add('active');
+                this.initSatelliteGame();
+            }
+
+            returnToMenu() {
+                this.currentMode = 'menu';
+                document.getElementById('mainMenu').style.display = 'block';
+                document.getElementById('cupolaMode').classList.remove('active');
+                document.getElementById('nblMode').classList.remove('active');
+                document.getElementById('weightlessnessMode').classList.remove('active');
+                document.getElementById('satelliteGameMode').classList.remove('active');
+                
+                // Reset all data
+                this.resetNBL();
+                this.resetWeightlessness();
+                this.resetSatelliteGame();
+            }
+
+            startEarthRotation() {
+                const earthView = document.getElementById('earthView');
+                if (earthView) {
+                    // Add dynamic cloud patterns
+                    const clouds = document.createElement('div');
+                    clouds.style.cssText = `
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: radial-gradient(circle at 60% 40%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                                   radial-gradient(circle at 20% 70%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
+                        border-radius: 50%;
+                        animation: cloudDrift 45s linear infinite reverse;
+                    `;
+                    earthView.appendChild(clouds);
+                }
+            }
+
+            viewWindow(type) {
+                const windowData = {
+                    climate: {
+                        title: 'Global Climate Monitoring',
+                        description: 'Real-time environmental analysis from space reveals critical climate patterns affecting 7.8 billion people worldwide.',
+                        impact: 'This ISS-based monitoring system tracks temperature variations, atmospheric composition, and weather patterns with unprecedented accuracy, supporting climate research initiatives in 195 countries.'
+                    },
+                    aurora: {
+                        title: 'Aurora Borealis Research',
+                        description: 'Advanced magnetosphere interaction analysis provides unique insights into space weather phenomena.',
+                        impact: 'Aurora research from the ISS has improved space weather prediction accuracy by 35%, protecting critical infrastructure worth over $4.2 billion annually.'
+                    },
+                    disaster: {
+                        title: 'Emergency Disaster Response',
+                        description: 'Real-time crisis management through advanced imaging and AI analysis enables rapid response coordination.',
+                        impact: 'The ISS disaster response system has improved disaster response times by 40% and coordinates with emergency services in 150+ countries.'
+                    },
+                    urban: {
+                        title: 'Urban Development Analysis',
+                        description: 'Smart city planning support through detailed population density mapping and infrastructure assessment.',
+                        impact: 'Urban analysis supports sustainable development for over 150 million residents and has contributed to 28% reduction in urban energy waste.'
+                    },
+                    ocean: {
+                        title: 'Global Ocean Health Monitoring',
+                        description: 'Marine ecosystem analysis tracks ocean health, phytoplankton populations, and current patterns.',
+                        impact: 'Ocean monitoring supports fisheries that feed 3.8 billion people and tracks the ocean\'s absorption of 28% of human CO2 emissions.'
+                    },
+                    space: {
+                        title: 'Advanced Space Weather Prediction',
+                        description: 'Solar activity monitoring protects critical satellite infrastructure from cosmic radiation.',
+                        impact: 'Space weather monitoring protects infrastructure worth over $1.8 trillion annually and ensures reliable communications for 4.5 billion people.'
+                    },
+                    research: {
+                        title: 'Scientific Research Laboratory',
+                        description: 'Microgravity experiments in protein crystallization, tissue engineering, and materials science.',
+                        impact: 'ISS research has led to breakthrough discoveries in medicine, materials science, and fundamental physics, benefiting humanity\'s future in space and on Earth.'
+                    }
+                };
+
+                const data = windowData[type] || windowData.climate;
+                
+                // Create modal-like overlay for window view
+            //     const overlay = document.createElement('div');
+            //     overlay.style.cssText = `
+            //         position: fixed;
+            //         top: 0;
+            //         left: 0;
+            //         width: 100%;
+            //         height: 100%;
+            //         background: rgba(0, 0, 0, 0.9);
+            //         z-index: 2000;
+            //         display: flex;
+            //         align-items: center;
+            //         justify-content: center;
+            //         backdrop-filter: blur(20px);
+            //         animation: fadeIn 0.3s ease-out;
+            //     `;
+
+            //     const content = document.createElement('div');
+            //     content.style.cssText = `
+            //         background: var(--card-bg);
+            //         border: 1px solid var(--border-color);
+            //         border-radius: var(--border-radius-xl);
+            //         padding: 3rem;
+            //         max-width: 800px;
+            //         width: 90%;
+            //         backdrop-filter: blur(40px);
+            //         box-shadow: 0 20px 60px var(--shadow-heavy);
+            //         animation: slideIn 0.4s ease-out;
+            //         position: relative;
+            //     `;
+
+            //     content.innerHTML = `
+            //         <button onclick="this.closest('.window-overlay').remove()" style="
+            //             position: absolute;
+            //             top: 1.5rem;
+            //             right: 1.5rem;
+            //             width: 40px;
+            //             height: 40px;
+            //             background: rgba(255, 255, 255, 0.1);
+            //             border: 1px solid var(--border-color);
+            //             border-radius: 50%;
+            //             color: var(--text-secondary);
+            //             cursor: pointer;
+            //             font-size: 1.2rem;
+            //             display: flex;
+            //             align-items: center;
+            //             justify-content: center;
+            //         ">&times;</button>
+            //         <h2 style="color: var(--text-primary); font-size: 2rem; margin-bottom: 1rem;">${data.title}</h2>
+            //         <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem;">${data.description}</p>
+            //         <div style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+            //             <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">Why It Matters</h3>
+            //             <p style="color: var(--text-secondary); line-height: 1.7;">${data.impact}</p>
+            //         </div>
+            //     `;
+
+            //     overlay.className = 'window-overlay';
+            //     overlay.appendChild(content);
+            //     document.body.appendChild(overlay);
+
+            //     // Close on outside click
+            //     overlay.addEventListener('click', (e) => {
+            //         if (e.target === overlay) {
+            //             overlay.remove();
+            //         }
+            //     });
+            // }
+
+            // startBubbleSystem() {
+            //     const scene = document.getElementById('underwaterScene');
+            //     if (!scene) return;
+
+            //     this.bubbleInterval = setInterval(() => {
+            //         const bubble = document.createElement('div');
+            //         bubble.className = 'bubble';
+            //         bubble.style.left = Math.random() * 100 + '%';
+            //         bubble.style.bottom = '0px';
+            //         bubble.style.width = bubble.style.height = (Math.random() * 20 + 10) + 'px';
+            //         bubble.style.animationDelay = Math.random() * 2 + 's';
+            //         scene.appendChild(bubble);
+
+            //         // Remove bubble after animation
+            //         setTimeout(() => {
+            //             if (bubble.parentNode) {
+            //                 bubble.parentNode.removeChild(bubble);
+            //             }
+            //         }, 4000);
+            //     }, 800);
+            // }
+
+            // updateBallast(value) {
+            //     this.nblData.ballast = parseFloat(value);
+            //     document.getElementById('ballastValue').textContent = value + ' kg';
+            //     this.updateBuoyancy();
+            // }
+
+            // updateFine(value) {
+            //     this.nblData.fine = parseFloat(value);
+            //     document.getElementById('fineValue').textContent = parseFloat(value).toFixed(1);
+            //     this.updateBuoyancy();
+            // }
+
+            // updateTrim(value) {
+            //     this.nblData.trim = parseFloat(value);
+            //     document.getElementById('trimValue').textContent = parseFloat(value).toFixed(2);
+            //     this.updateBuoyancy();
+            // }
+
+            // updateBuoyancy() {
+            //     const astronaut = document.getElementById('astronautAvatar');
+            //     const statusEl = document.getElementById('buoyancyStatus');
+            //     const stabilityEl = document.getElementById('stabilityIndex');
+            //     const startBtn = document.getElementById('startMission');
+
+            //     if (!astronaut || !statusEl) return;
+
+            //     const totalWeight = this.nblData.ballast + this.nblData.fine + this.nblData.trim;
+            //     const stability = Math.max(0, 100 - Math.abs(totalWeight) * 15);
+                
+            //     let position, status, canStart = false;
+
+            //     if (totalWeight < -1.5) {
+            //         position = '20%';
+            //         status = 'Positive';
+            //         statusEl.style.color = 'var(--warning-yellow)';
+            //     } else if (totalWeight > 1.5) {
+            //         position = '80%';
+            //         status = 'Negative';
+            //         statusEl.style.color = 'var(--error-red)';
+            //     } else {
+            //         position = '50%';
+            //         status = 'Neutral ✓';
+            //         statusEl.style.color = 'var(--success-green)';
+            //         canStart = true;
+            //     }
+
+            //     astronaut.style.top = position;
+            //     statusEl.textContent = status;
+            //     stabilityEl.textContent = stability.toFixed(1);
+                
+            //     if (startBtn) {
+            //         startBtn.disabled = !canStart || this.nblData.isActive;
+            //     }
+            // }
+
+            // startMission() {
+            //     if (this.nblData.isActive) return;
+
+            //     this.nblData.isActive = true;
+            //     this.nblData.timer = 90;
+            //     this.nblData.startTime = Date.now();
+                
+            //     const startBtn = document.getElementById('startMission');
+            //     const timerEl = document.getElementById('missionTimer');
+                
+            //     if (startBtn) {
+            //         startBtn.textContent = 'Mission Active';
+            //         startBtn.disabled = true;
+            //     }
+
+            //     const interval = setInterval(() => {
+            //         this.nblData.timer--;
+            //         if (timerEl) timerEl.textContent = this.nblData.timer;
+
+            //         if (this.nblData.timer <= 0) {
+            //             clearInterval(interval);
+            //             this.completeMission();
+            //         }
+            //     }, 1000);
+            // }
+
+            // completeMission() {
+            //     this.nblData.isActive = false;
+                
+            //     const totalWeight = this.nblData.ballast + this.nblData.fine + this.nblData.trim;
+            //     const score = Math.max(0, 100 - Math.abs(totalWeight) * 10);
+            //     const timeBonus = this.nblData.timer > 0 ? this.nblData.timer : 0;
+            //     const finalScore = Math.min(100, score + timeBonus * 0.5);
+                
+            //     // Calculate astronaut comparison (7:1 ratio)
+            //     const astronautTime = 90 * 7; // 630 seconds for real astronaut
+            //     const userTime = 90 - this.nblData.timer;
+            //     const ratio = Math.max(0.1, userTime / 90).toFixed(1);
+                
+            //     document.getElementById('missionScore').textContent = Math.round(finalScore) + '%';
+            //     document.getElementById('astronautRatio').textContent = ratio + ':7';
+                
+            //     const startBtn = document.getElementById('startMission');
+            //     if (startBtn) {
+            //         startBtn.textContent = finalScore >= 80 ? 'Mission Success!' : 'Try Again';
+            //         startBtn.style.background = finalScore >= 80 ? 'var(--gradient-success)' : 'var(--gradient-accent)';
+                    
+            //         setTimeout(() => {
+            //             startBtn.textContent = 'Start Mission';
+            //             startBtn.style.background = 'var(--gradient-success)';
+            //             startBtn.disabled = false;
+            //         }, 3000);
+            //     }
+
+            //     // Success animation
+            //     if (finalScore >= 80) {
+            //         this.showSuccessAnimation();
+            //     }
+            // }
+
+            // showSuccessAnimation() {
+            //     const scene = document.getElementById('underwaterScene');
+            //     if (!scene) return;
+
+            //     // Create success particles
+            //     for (let i = 0; i < 20; i++) {
+            //         const particle = document.createElement('div');
+            //         particle.style.cssText = `
+            //             position: absolute;
+            //             width: 8px;
+            //             height: 8px;
+            //             background: var(--success-green);
+            //             border-radius: 50%;
+            //             left: ${Math.random() * 100}%;
+            //             top: ${Math.random() * 100}%;
+            //             animation: successParticle 2s ease-out forwards;
+            //             box-shadow: 0 0 10px var(--success-green);
+            //         `;
+            //         scene.appendChild(particle);
+
+            //         setTimeout(() => {
+            //             if (particle.parentNode) {
+            //                 particle.parentNode.removeChild(particle);
+            //             }
+            //         }, 2000);
+            //     }
+            
+            }
+
+
+            updateBallast(value) {
+                this.nblData.ballast = parseFloat(value);
+                document.getElementById('ballastValue').textContent = value + ' kg';
+                this.updateBuoyancy();
+            }
+
+            updateFine(value) {
+                this.nblData.fine = parseFloat(value);
+                document.getElementById('fineValue').textContent = parseFloat(value).toFixed(1);
+                this.updateBuoyancy();
+            }
+
+            updateTrim(value) {
+                this.nblData.trim = parseFloat(value);
+                document.getElementById('trimValue').textContent = parseFloat(value).toFixed(2);
+                this.updateBuoyancy();
+            }
+
+            updateBuoyancy() {
+                const astronaut = document.getElementById('astronautAvatar');
+                const statusEl = document.getElementById('buoyancyStatus');
+                const stabilityEl = document.getElementById('stabilityIndex');
+                const startBtn = document.getElementById('startMission');
+
+                if (!astronaut || !statusEl) return;
+
+                const totalWeight = this.nblData.ballast + this.nblData.fine + this.nblData.trim;
+                const stability = Math.max(0, 100 - Math.abs(totalWeight) * 15);
+                
+                // Physics calculations
+                const waterDensity = 1000; // kg/m³
+                const astronautVolume = 0.3; // m³ (approximate)
+                const gravity = 9.81; // m/s²
+                
+                const buoyantForce = waterDensity * astronautVolume * gravity;
+                const weightForce = (80 + totalWeight) * gravity; // 80kg base astronaut weight
+                const netForce = buoyantForce - weightForce;
+                const acceleration = netForce / (80 + totalWeight);
+
+                // Update physics display
+                document.getElementById('buoyantForce').textContent = buoyantForce.toFixed(1) + 'N';
+                document.getElementById('weightForce').textContent = weightForce.toFixed(1) + 'N';
+                document.getElementById('netForce').textContent = netForce.toFixed(1) + 'N';
+                document.getElementById('acceleration').textContent = acceleration.toFixed(2) + ' m/s²';
+                
+                let position, status, canStart = false, isStable = false;
+
+                if (totalWeight < -1.5) {
+                    position = '20%';
+                    status = 'Positive';
+                    statusEl.style.color = 'var(--warning-yellow)';
+                } else if (totalWeight > 1.5) {
+                    position = '80%';
+                    status = 'Negative';
+                    statusEl.style.color = 'var(--error-red)';
+                } else {
+                    position = '50%';
+                    status = 'Neutral ✓';
+                    statusEl.style.color = 'var(--success-green)';
+                    canStart = true;
+                    isStable = true;
+                }
+
+                astronaut.style.top = position;
+                statusEl.textContent = status;
+                stabilityEl.textContent = stability.toFixed(1);
+                
+                if (startBtn) {
+                    startBtn.disabled = !canStart || this.nblData.isActive;
+                }
+
+                // Track stability time during mission
+                if (this.nblData.isActive && isStable) {
+                    this.nblData.stableTime += 0.1; // Approximate update frequency
+                }
+            }
+
+            startMission() {
+                if (this.nblData.isActive) return;
+
+                this.nblData.isActive = true;
+                this.nblData.timer = 90;
+                this.nblData.startTime = Date.now();
+                this.nblData.stableTime = 0;
+                this.nblData.totalTime = 0;
+                this.nblData.instabilitiesHandled = 0;
+                this.nblData.lastInstabilityTime = Date.now();
+                
+                const startBtn = document.getElementById('startMission');
+                const timerEl = document.getElementById('missionTimer');
+                
+                if (startBtn) {
+                    startBtn.textContent = 'Mission Active';
+                    startBtn.disabled = true;
+                }
+
+                // Start automatic instability system every 1.5 seconds
+                this.nblData.instabilityInterval = setInterval(() => {
+                    if (this.nblData.isActive) {
+                        this.addInstability();
+                    }
+                }, 1500);
+
+                // Mission timer
+                const interval = setInterval(() => {
+                    this.nblData.timer--;
+                    this.nblData.totalTime++;
+                    
+                    if (timerEl) timerEl.textContent = this.nblData.timer;
+                    
+                    // Update stability percentage
+                    const stabilityPercentage = this.nblData.totalTime > 0 ? 
+                        (this.nblData.stableTime / this.nblData.totalTime * 100) : 0;
+                    document.getElementById('stabilityTime').textContent = stabilityPercentage.toFixed(1) + '%';
+
+                    if (this.nblData.timer <= 0) {
+                        clearInterval(interval);
+                        if (this.nblData.instabilityInterval) {
+                            clearInterval(this.nblData.instabilityInterval);
+                        }
+                        this.completeMission();
+                    }
+                }, 1000);
+
+                // Update buoyancy more frequently during mission
+                const buoyancyUpdateInterval = setInterval(() => {
+                    if (this.nblData.isActive) {
+                        this.updateBuoyancy();
+                    } else {
+                        clearInterval(buoyancyUpdateInterval);
+                    }
+                }, 100);
+            }
+
+            addInstability() {
+                const instabilityTypes = [
+                    { type: 'ballast', message: 'BALLAST INSTABILITY DETECTED!', slider: 'ballastSlider', range: 4 },
+                    { type: 'fine', message: 'BUOYANCY COMPENSATION NEEDED!', slider: 'fineSlider', range: 1.5 },
+                    { type: 'trim', message: 'TRIM ADJUSTMENT REQUIRED!', slider: 'trimSlider', range: 0.5 }
+                ];
+
+                const instability = instabilityTypes[Math.floor(Math.random() * instabilityTypes.length)];
+                const instabilityAmount = (Math.random() - 0.5) * instability.range;
+                
+                this.nblData.instabilitiesHandled++;
+                document.getElementById('instabilitiesHandled').textContent = this.nblData.instabilitiesHandled;
+                
+                // Apply instability to the appropriate slider
+                const slider = document.getElementById(instability.slider);
+                const currentValue = parseFloat(slider.value);
+                const newValue = Math.max(
+                    parseFloat(slider.min), 
+                    Math.min(parseFloat(slider.max), currentValue + instabilityAmount)
+                );
+                
+                slider.value = newValue;
+                
+                // Update the corresponding control
+                switch (instability.type) {
+                    case 'ballast':
+                        this.updateBallast(newValue);
+                        break;
+                    case 'fine':
+                        this.updateFine(newValue);
+                        break;
+                    case 'trim':
+                        this.updateTrim(newValue);
+                        break;
+                }
+                
+                // Visual feedback
+                this.showInstabilityWarning(instability.message);
+                this.shakeAstronaut();
+                this.shakeScreen();
+            }
+
+            showInstabilityWarning(message) {
+                const scene = document.getElementById('underwaterScene');
+                if (!scene) return;
+                
+                const warning = document.createElement('div');
+                warning.style.cssText = `
+                    position: absolute;
+                    top: 10%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 51, 102, 0.95);
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: var(--border-radius-md);
+                    font-weight: 700;
+                    font-size: 1.1rem;
+                    z-index: 1000;
+                    animation: warningPulse 0.5s ease-out;
+                    box-shadow: 0 4px 20px rgba(255, 51, 102, 0.5);
+                    text-align: center;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                `;
+                warning.textContent = '⚠️ ' + message;
+                
+                scene.appendChild(warning);
+                
+                setTimeout(() => {
+                    if (warning.parentNode) {
+                        warning.parentNode.removeChild(warning);
+                    }
+                }, 2000);
+            }
+
+            shakeAstronaut() {
+                const astronaut = document.getElementById('astronautAvatar');
+                if (!astronaut) return;
+                
+                astronaut.style.animation = 'none';
+                astronaut.style.transform = 'translate(-50%, -50%) rotate(' + (Math.random() * 20 - 10) + 'deg)';
+                
+                setTimeout(() => {
+                    astronaut.style.animation = 'underwaterFloat 3s ease-in-out infinite';
+                    astronaut.style.transform = 'translate(-50%, -50%)';
+                }, 500);
+            }
+
+            shakeScreen() {
+                const scene = document.getElementById('underwaterScene');
+                if (!scene) return;
+                
+                scene.classList.add('instability-shake');
+                
+                setTimeout(() => {
+                    scene.classList.remove('instability-shake');
+                }, 500);
+            }
+
+            completeMission() {
+                this.nblData.isActive = false;
+                
+                if (this.nblData.instabilityInterval) {
+                    clearInterval(this.nblData.instabilityInterval);
+                    this.nblData.instabilityInterval = null;
+                }
+                
+                const stabilityPercentage = this.nblData.totalTime > 0 ? 
+                    (this.nblData.stableTime / this.nblData.totalTime * 100) : 0;
+                
+                let grade, gradeColor, message;
+                
+                if (stabilityPercentage >= 90) {
+                    grade = 'A+';
+                    gradeColor = 'var(--success-green)';
+                    message = 'Outstanding! Astronaut-level performance!';
+                } else if (stabilityPercentage >= 80) {
+                    grade = 'A';
+                    gradeColor = 'var(--success-green)';
+                    message = 'Excellent stability control!';
+                } else if (stabilityPercentage >= 70) {
+                    grade = 'B+';
+                    gradeColor = 'var(--primary-blue)';
+                    message = 'Good performance! Mission successful!';
+                } else if (stabilityPercentage >= 60) {
+                    grade = 'B';
+                    gradeColor = 'var(--warning-yellow)';
+                    message = 'Decent control, but needs improvement.';
+                } else if (stabilityPercentage >= 50) {
+                    grade = 'C';
+                    gradeColor = 'var(--accent-orange)';
+                    message = 'Basic level achieved. More training needed.';
+                } else {
+                    grade = 'D';
+                    gradeColor = 'var(--error-red)';
+                    message = 'Mission challenging. Keep practicing!';
+                }
+                
+                this.showMissionResults(grade, gradeColor, stabilityPercentage, message);
+                
+                const startBtn = document.getElementById('startMission');
+                if (startBtn) {
+                    startBtn.textContent = 'Start New Mission';
+                    startBtn.disabled = false;
+                }
+            }
+
+            showMissionResults(grade, gradeColor, stabilityPercentage, message) {
+                const scene = document.getElementById('underwaterScene');
+                if (!scene) return;
+
+                const results = document.createElement('div');
+                results.className = 'mission-results';
+                results.innerHTML = `
+                    <div class="results-grade" style="color: ${gradeColor};">${grade}</div>
+                    <h3 style="color: var(--text-primary); margin-bottom: 1rem;">Mission Complete!</h3>
+                    <div class="results-details">
+                        <div><strong>Stability Time:</strong> ${stabilityPercentage.toFixed(1)}%</div>
+                        <div><strong>Instabilities Handled:</strong> ${this.nblData.instabilitiesHandled}</div>
+                        <div><strong>Grade:</strong> ${grade}</div>
+                        <div style="margin-top: 1rem; color: var(--text-secondary);">${message}</div>
+                    </div>
+                    <button class="results-close" onclick="this.parentElement.remove()">Continue Training</button>
+                `;
+
+                scene.appendChild(results);
+
+                // Success particles for high scores
+                if (stabilityPercentage >= 80) {
+                    this.showSuccessAnimation();
+                }
+            }
+
+            showSuccessAnimation() {
+                const scene = document.getElementById('underwaterScene');
+                if (!scene) return;
+
+                for (let i = 0; i < 30; i++) {
+                    const particle = document.createElement('div');
+                    particle.style.cssText = `
+                        position: absolute;
+                        width: 8px;
+                        height: 8px;
+                        background: var(--success-green);
+                        border-radius: 50%;
+                        left: ${Math.random() * 100}%;
+                        top: ${Math.random() * 100}%;
+                        animation: successParticle 3s ease-out forwards;
+                        box-shadow: 0 0 10px var(--success-green);
+                        z-index: 999;
+                    `;
+                    scene.appendChild(particle);
+
+                    setTimeout(() => {
+                        if (particle.parentNode) {
+                            particle.parentNode.removeChild(particle);
+                        }
+                    }, 3000);
+                }
+            }
+
+
+
+            initWeightlessnessDemo() {
+                const viewport = document.getElementById('weightlessViewport');
+                if (!viewport) return;
+
+                // Add click event to spawn objects
+                viewport.addEventListener('click', (e) => {
+                    if (e.target === viewport) {
+                        this.spawnWeightlessObject(e.offsetX, e.offsetY);
+                    }
+                });
+
+                // Initialize with a few objects
+                this.spawnWeightlessObject(200, 150);
+                this.spawnWeightlessObject(400, 300);
+                this.spawnWeightlessObject(600, 200);
+            }
+
+            spawnWeightlessObject(x, y) {
+                const viewport = document.getElementById('weightlessViewport');
+                if (!viewport) return;
+
+                const objects = ['🛰️', '🔧', '📡', '🔋', '⚙️', '🧰', '📱', '💻', '🔬', '🌌'];
+                const randomObject = objects[Math.floor(Math.random() * objects.length)];
+
+                const obj = document.createElement('div');
+                obj.className = 'weightless-object';
+                obj.textContent = randomObject;
+                obj.style.left = x + 'px';
+                obj.style.top = y + 'px';
+
+                // Physics properties
+                const physics = {
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    isDragging: false,
+                    element: obj
+                };
+
+                this.weightlessObjects.push(physics);
+
+                // Drag functionality
+                let isDragging = false;
+                let dragOffset = { x: 0, y: 0 };
+
+                obj.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    physics.isDragging = true;
+                    obj.classList.add('dragging');
+                    dragOffset.x = e.offsetX;
+                    dragOffset.y = e.offsetY;
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        const rect = viewport.getBoundingClientRect();
+                        physics.x = e.clientX - rect.left - dragOffset.x;
+                        physics.y = e.clientY - rect.top - dragOffset.y;
+                        obj.style.left = physics.x + 'px';
+                        obj.style.top = physics.y + 'px';
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        physics.isDragging = false;
+                        obj.classList.remove('dragging');
+                        // Add some velocity when released
+                        physics.vx = (Math.random() - 0.5) * 4;
+                        physics.vy = (Math.random() - 0.5) * 4;
+                    }
+                });
+
+                viewport.appendChild(obj);
+                this.updateObjectCount();
+                this.startWeightlessPhysics();
+            }
+
+            startWeightlessPhysics() {
+                if (this.physicsInterval) return;
+
+                this.physicsInterval = setInterval(() => {
+                    const viewport = document.getElementById('weightlessViewport');
+                    if (!viewport) return;
+
+                    const bounds = viewport.getBoundingClientRect();
+
+                    this.weightlessObjects.forEach(obj => {
+                        if (obj.isDragging) return;
+
+                        // Update position
+                        obj.x += obj.vx;
+                        obj.y += obj.vy;
+
+                        // Bounce off walls
+                        if (obj.x <= 0 || obj.x >= bounds.width - 40) {
+                            obj.vx *= -0.8;
+                            obj.x = Math.max(0, Math.min(bounds.width - 40, obj.x));
+                        }
+                        if (obj.y <= 0 || obj.y >= bounds.height - 40) {
+                            obj.vy *= -0.8;
+                            obj.y = Math.max(0, Math.min(bounds.height - 40, obj.y));
+                        }
+
+                        // Apply slight friction to simulate air resistance
+                        obj.vx *= 0.999;
+                        obj.vy *= 0.999;
+
+                        // Update DOM element
+                        obj.element.style.left = obj.x + 'px';
+                        obj.element.style.top = obj.y + 'px';
+                    });
+                }, 16); // ~60fps
+            }
+
+            updateObjectCount() {
+                const countEl = document.getElementById('objectCount');
+                if (countEl) {
+                    countEl.textContent = this.weightlessObjects.length;
+                }
+            }
+
+            clearAllObjects() {
+                const viewport = document.getElementById('weightlessViewport');
+                if (!viewport) return;
+
+                this.weightlessObjects.forEach(obj => {
+                    if (obj.element && obj.element.parentNode) {
+                        obj.element.parentNode.removeChild(obj.element);
+                    }
+                });
+
+                this.weightlessObjects = [];
+                this.updateObjectCount();
+            }
+
+            initSatelliteGame() {
+                this.satelliteGame = {
+                    score: 0,
+                    level: 1,
+                    health: 100,
+                    playerX: 50,
+                    playerY: 50,
+                    debris: [],
+                    dataPoints: [],
+                    isActive: true,
+                    moveDirection: null
+                };
+
+                this.updateGameUI();
+                this.startSatelliteGame();
+            }
+
+            startSatelliteGame() {
+                if (this.gameInterval) return;
+
+                this.gameInterval = setInterval(() => {
+                    this.updateSatelliteGame();
+                }, 100);
+
+                // Spawn debris and data points
+                setInterval(() => {
+                    if (this.satelliteGame.isActive) {
+                        this.spawnDebris();
+                        if (Math.random() < 0.3) this.spawnDataPoint();
+                    }
+                }, 2000);
+            }
+
+            updateSatelliteGame() {
+                if (!this.satelliteGame.isActive) return;
+
+                const player = document.getElementById('satellitePlayer');
+                const viewport = document.getElementById('satelliteViewport');
+                if (!player || !viewport) return;
+
+                // Move player
+                if (this.satelliteGame.moveDirection) {
+    const speedX = 2;   // horizontal speed
+    const speedY = 4;   // vertical speed (faster)
+    switch (this.satelliteGame.moveDirection) {
+        case 'left':  this.satelliteGame.playerX = Math.max(5, this.satelliteGame.playerX - speedX); break;
+        case 'right': this.satelliteGame.playerX = Math.min(95, this.satelliteGame.playerX + speedX); break;
+        case 'up':    this.satelliteGame.playerY = Math.max(5, this.satelliteGame.playerY - speedY); break;
+        case 'down':  this.satelliteGame.playerY = Math.min(95, this.satelliteGame.playerY + speedY); break;
+    }
+}
+
+                player.style.left = this.satelliteGame.playerX + '%';
+                player.style.top = this.satelliteGame.playerY + '%';
+
+                // Check collisions
+                this.checkCollisions();
+            }
+
+            spawnDebris() {
+                const viewport = document.getElementById('satelliteViewport');
+                if (!viewport) return;
+
+                const debris = document.createElement('div');
+                debris.className = 'space-debris';
+                debris.textContent = '☄️';
+                debris.style.left = '-50px';
+                debris.style.top = Math.random() * 80 + 10 + '%';
+
+                viewport.appendChild(debris);
+
+                setTimeout(() => {
+                    if (debris.parentNode) {
+                        debris.parentNode.removeChild(debris);
+                    }
+                }, 8000);
+            }
+
+            spawnDataPoint() {
+                const viewport = document.getElementById('satelliteViewport');
+                if (!viewport) return;
+
+                const dataPoint = document.createElement('div');
+                dataPoint.className = 'data-point';
+                dataPoint.textContent = '💎';
+                dataPoint.style.left = Math.random() * 80 + 10 + '%';
+                dataPoint.style.top = Math.random() * 80 + 10 + '%';
+
+                dataPoint.addEventListener('click', () => {
+                    this.collectDataPoint(dataPoint);
+                });
+
+                viewport.appendChild(dataPoint);
+
+                setTimeout(() => {
+                    if (dataPoint.parentNode) {
+                        dataPoint.parentNode.removeChild(dataPoint);
+                    }
+                }, 5000);
+            }
+
+            collectDataPoint(dataPoint) {
+                this.satelliteGame.score += 100;
+                this.updateGameUI();
+                
+                if (dataPoint.parentNode) {
+                    dataPoint.parentNode.removeChild(dataPoint);
+                }
+
+                // Level up every 500 points
+                if (this.satelliteGame.score % 500 === 0) {
+                    this.satelliteGame.level++;
+                    this.updateGameUI();
+                }
+            }
+
+            // checkCollisions() {
+            //     const player = document.getElementById('satellitePlayer');
+            //     const debris = document.querySelectorAll('.space-debris');
+                
+            //     if (!player) return;
+
+            //     const playerRect = player.getBoundingClientRect();
+
+            //     debris.forEach(debrisEl => {
+            //         const debrisRect = debrisEl.getBoundingClientRect();
+                    
+            //         if (this.isColliding(playerRect, debrisRect)) {
+            //             this.satelliteGame.health -= 10;
+            //             this.updateGameUI();
+                        
+            //             if (debrisEl.parentNode) {
+            //                 debrisEl.parentNode.removeChild(debrisEl);
+            //             }
+
+            //             if (this.satelliteGame.health <= 0) {
+            //                 this.gameOver();
+            //             }
+            //         }
+            //     });
+            // }
+checkCollisions() {
+    const player = document.getElementById('satellitePlayer');
+    if (!player) return;
+
+    const playerRect = player.getBoundingClientRect();
+
+    // Check debris collisions
+    document.querySelectorAll('.space-debris').forEach(debrisEl => {
+        const debrisRect = debrisEl.getBoundingClientRect();
+        if (this.isColliding(playerRect, debrisRect)) {
+            this.satelliteGame.health -= 10;
+            this.updateGameUI();
+
+            if (debrisEl.parentNode) {
+                debrisEl.parentNode.removeChild(debrisEl);
+            }
+
+            if (this.satelliteGame.health <= 0) {
+                this.gameOver();
+            }
+        }
+    });
+
+    // ✅ Check diamond/data collisions
+    document.querySelectorAll('.data-point').forEach(dataEl => {
+        const dataRect = dataEl.getBoundingClientRect();
+        if (this.isColliding(playerRect, dataRect)) {
+            this.collectDataPoint(dataEl);
+        }
+    });
+}
+
+
+            isColliding(rect1, rect2) {
+                return !(rect1.right < rect2.left || 
+                        rect1.left > rect2.right || 
+                        rect1.bottom < rect2.top || 
+                        rect1.top > rect2.bottom);
+            }
+
+            updateGameUI() {
+                const scoreEl = document.getElementById('gameScore');
+                const levelEl = document.getElementById('gameLevel');
+                const healthEl = document.getElementById('gameHealth');
+
+                if (scoreEl) scoreEl.textContent = this.satelliteGame.score;
+                if (levelEl) levelEl.textContent = this.satelliteGame.level;
+                if (healthEl) healthEl.textContent = this.satelliteGame.health;
+            }
+
+            gameOver() {
+                this.satelliteGame.isActive = false;
+                alert(`Game Over! Final Score: ${this.satelliteGame.score}`);
+                this.resetSatelliteGame();
+            }
+
+            resetNBL() {
+                this.nblData = {
+                    ballast: 0,
+                    fine: 0,
+                    trim: 0,
+                    timer: 90,
+                    isActive: false,
+                    score: 0,
+                    startTime: null
+                };
+
+                // Reset UI elements
+                const elements = {
+                    ballastSlider: '0',
+                    fineSlider: '0',
+                    trimSlider: '0',
+                    ballastValue: '0 kg',
+                    fineValue: '0.0',
+                    trimValue: '0.00',
+                    missionTimer: '90',
+                    missionScore: '0%',
+                    astronautRatio: '0:1'
+                };
+
+                Object.entries(elements).forEach(([id, value]) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.tagName === 'INPUT') {
+                            el.value = value.replace(/[^\d.-]/g, '');
+                        } else {
+                            el.textContent = value;
+                        }
+                    }
+                });
+
+                // Clear bubble interval
+                if (this.bubbleInterval) {
+                    clearInterval(this.bubbleInterval);
+                    this.bubbleInterval = null;
+                }
+            }
+
+            resetWeightlessness() {
+                this.clearAllObjects();
+                if (this.physicsInterval) {
+                    clearInterval(this.physicsInterval);
+                    this.physicsInterval = null;
+                }
+            }
+
+            resetSatelliteGame() {
+                this.satelliteGame = {
+                    score: 0,
+                    level: 1,
+                    health: 100,
+                    playerX: 50,
+                    playerY: 50,
+                    debris: [],
+                    dataPoints: [],
+                    isActive: false,
+                    moveDirection: null
+                };
+
+                if (this.gameInterval) {
+                    clearInterval(this.gameInterval);
+                    this.gameInterval = null;
+                }
+
+                // Clear game elements
+                const viewport = document.getElementById('satelliteViewport');
+                if (viewport) {
+                    const debris = viewport.querySelectorAll('.space-debris');
+                    const dataPoints = viewport.querySelectorAll('.data-point');
+                    
+                    debris.forEach(el => el.remove());
+                    dataPoints.forEach(el => el.remove());
+                }
+            }
+        }
+
+        // Global functions for HTML onclick handlers
+        let app;
+
+        function enterCupolaMode() {
+            if (app) app.enterCupolaMode();
+        }
+
+        function enterNBLMode() {
+            if (app) app.enterNBLMode();
+        }
+
+        function enterWeightlessnessDemo() {
+            if (app) app.enterWeightlessnessDemo();
+        }
+
+        function enterSatelliteGame() {
+            if (app) app.enterSatelliteGame();
+        }
+
+        function returnToMenu() {
+            if (app) app.returnToMenu();
+        }
+
+        function viewWindow(type) {
+            if (app) app.viewWindow(type);
+        }
+
+        function updateBallast(value) {
+            if (app) app.updateBallast(value);
+        }
+
+        function updateFine(value) {
+            if (app) app.updateFine(value);
+        }
+
+        function updateTrim(value) {
+            if (app) app.updateTrim(value);
+        }
+
+        function startMission() {
+            if (app) app.startMission();
+        }
+
+        function clearAllObjects() {
+            if (app) app.clearAllObjects();
+        }
+
+        function startMoving(direction) {
+            if (app) app.satelliteGame.moveDirection = direction;
+        }
+
+        function stopMoving() {
+            if (app) app.satelliteGame.moveDirection = null;
+        }
+
+        // NBL-specific functions
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function openLightbox(imageType) {
+            const lightboxData = {
+                'nbl-training': {
+                    title: 'NBL Training Session',
+                    description: 'Astronauts practice EVA procedures in the 6.2 million gallon pool at the Sonny Carter Training Facility.',
+                    icon: '🏊‍♂️'
+                },
+                'nbl-pool': {
+                    title: 'NBL Pool Overview',
+                    description: 'The massive 202×102×40 foot pool provides a controlled environment for spacewalk training.',
+                    icon: '🏊‍♀️'
+                },
+                'nbl-equipment': {
+                    title: 'Training Equipment',
+                    description: 'Specialized tools and mock-ups of ISS components are used for realistic training scenarios.',
+                    icon: '⚙️'
+                },
+                'nbl-astronauts': {
+                    title: 'Astronaut Training',
+                    description: 'Professional astronauts undergo rigorous underwater training to prepare for spacewalks.',
+                    icon: '🧑‍🚀'
+                }
+            };
+
+            const data = lightboxData[imageType] || lightboxData['nbl-training'];
+            
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(20px);
+                animation: fadeIn 0.3s ease-out;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: var(--border-radius-xl);
+                padding: 3rem;
+                max-width: 800px;
+                width: 90%;
+                backdrop-filter: blur(40px);
+                box-shadow: 0 20px 60px var(--shadow-heavy);
+                animation: slideIn 0.4s ease-out;
+                position: relative;
+                text-align: center;
+            `;
+
+            content.innerHTML = `
+                <button onclick="this.closest('.lightbox-overlay').remove()" style="
+                    position: absolute;
+                    top: 1.5rem;
+                    right: 1.5rem;
+                    width: 40px;
+                    height: 40px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid var(--border-color);
+                    border-radius: 50%;
+                    color: var(--text-secondary);
+                    cursor: pointer;
+                    font-size: 1.2rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                ">&times;</button>
+                <div style="font-size: 6rem; margin-bottom: 2rem;">${data.icon}</div>
+                <h2 style="color: var(--text-primary); font-size: 2rem; margin-bottom: 1rem;">${data.title}</h2>
+                <p style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.7; margin-bottom: 2rem;">${data.description}</p>
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 2rem; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                        High-resolution images available at: 
+                        <a href="https://images.nasa.gov/" target="_blank" rel="noopener noreferrer" style="color: var(--primary-blue);">NASA Image & Video Library</a>
+                    </p>
+                </div>
+            `;
+
+            overlay.className = 'lightbox-overlay';
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.remove();
+                }
+            });
+        }
+
+        function loadVideo() {
+            const videoWrapper = document.querySelector('.video-wrapper');
+            if (!videoWrapper) return;
+
+            // Create iframe for YouTube video
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: none;
+                border-radius: var(--border-radius-lg);
+            `;
+            iframe.src = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1'; // Placeholder video
+            iframe.title = 'NASA NBL Training Video';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+
+            // Replace placeholder with iframe
+            videoWrapper.innerHTML = '';
+            videoWrapper.appendChild(iframe);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            app = new HorizonHoverApp();
+        });
+
+        // Add additional CSS animations
+        const additionalStyles = document.createElement('style');
+        additionalStyles.textContent = `
+            @keyframes cloudDrift {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            
+            @keyframes slideIn {
+                from { transform: translateY(-40px) scale(0.95); opacity: 0; }
+                to { transform: translateY(0) scale(1); opacity: 1; }
+            }
+            
+            @keyframes successParticle {
+                0% { transform: scale(0) rotate(0deg); opacity: 1; }
+                50% { transform: scale(1.5) rotate(180deg); opacity: 0.8; }
+                100% { transform: scale(0) rotate(360deg); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(additionalStyles);
+    </script>
+    
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'989554f4c4ac167a',t:'MTc1OTU4Nzc1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
+<footer style="background: var(--dark-bg); color: var(--text-secondary); text-align: center; padding: 2rem 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <p style="margin-bottom: 0.5rem; color: var(--text-primary); font-weight: 500;">
+            ISS Virtual Experience © 2025
+        </p>
+        <p style="margin-bottom: 0.5rem;">
+            Created for educational and simulation purposes. Not affiliated with NASA.
+        </p>
+        <p>
+            <a href="https://www.nasa.gov" target="_blank" style="color: var(--primary-blue); text-decoration: none;">NASA Official Website</a> 
+            | <a href="mailto:info@example.com" style="color: var(--primary-blue); text-decoration: none;">Contact</a>
+        </p>
+    </div>
+</footer>
+</body>
+</html>

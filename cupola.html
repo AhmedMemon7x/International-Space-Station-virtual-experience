@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ISS Cupola Experience</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#020418;
+      --panel: rgba(255,255,255,0.03);
+      --glass: rgba(255,255,255,0.04);
+      --accent:#4aa3ff;
+      --accent-2:#7bf0d6;
+      --muted:#9fb2bd;
+      --success:#2bd98b;
+      --danger:#ff6b6b;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;padding:0;
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto;
+      background: radial-gradient(circle at 10% 10%, #001226 0%, #02060b 45%, #000 100%);
+      color:#e7f6ff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+.back-btn {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-medium);
+            backdrop-filter: blur(20px);
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+        }
+
+    /* Layout */
+    .container{max-width:1300px;margin:28px auto;padding:20px;display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
+    header{grid-column:1/-1;display:flex;align-items:center;gap:18px;margin-bottom:6px}
+    .brand{display:flex;flex-direction:column}
+    .brand h1{margin:0;font-size:20px;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;color:transparent}
+    .subtitle{color:var(--muted);font-size:13px;margin-top:6px}
+
+    /* Left column: Cupola experience */
+    .card{background:var(--panel);border-radius:16px;padding:14px;border:1px solid var(--glass);box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+    .cupola-area{display:flex;flex-direction:column;gap:12px}
+
+    /* Top controls */
+    .controls{display:flex;gap:10px;align-items:center}
+    .btn{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer;font-weight:700}
+    .btn.ghost{background:transparent}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* Stage (big) */
+    .stage{position:relative;height:560px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-width:300px}
+    .stage .bg-stars{position:absolute;inset:0;background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(74,144,226,0.03) 0%, transparent 30%),
+        radial-gradient(ellipse at 80% 80%, rgba(123,200,180,0.02) 0%, transparent 30%);
+      pointer-events:none;mix-blend-mode:screen}
+    /* Cupola background image (subtle) */
+    .stage .bg-cupola{position:absolute;inset:0;background:url('https://www.nasa.gov/sites/default/files/thumbnails/image/iss063e021440.jpg') center/cover no-repeat;opacity:0.18;filter:grayscale(0.1) blur(2px);pointer-events:none}
+
+    /* Earth globe container */
+    .globe-wrap{position:relative;width:520px;height:520px;border-radius:80%;overflow:hidden;box-shadow:0 40px 140px rgba(21,92,153,0.12), inset 0 -40px 80px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.02);background:radial-gradient(circle at 30% 30%, rgba(74,144,226,0.03),transparent 30%)}
+    .globe{width:100%;height:100%;border-radius:50%;background-image:url('https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74474/earth_lrg.jpg');background-size:cover;background-position:center;animation:globeSpin 36s linear infinite;transform-origin:center center;will-change:transform}
+    .glow{position:absolute;inset:-30%;background:radial-gradient(circle at 40% 35%, rgba(74,144,226,0.12),transparent 40%);pointer-events:none}
+
+    @keyframes globeSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+    /* Terminator overlay (day/night) */
+    .terminator{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:linear-gradient(90deg, rgba(0,0,0,0.0) 45%, rgba(0,0,0,0.5) 55%);mix-blend-mode:multiply;opacity:0.55}
+
+    /* ISS marker */
+    .iss-marker{position:absolute;width:18px;height:18px;border-radius:50%;background:linear-gradient(180deg,#fff,#cfefff);box-shadow:0 6px 18px rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#003;}
+
+    /* Windows grid overlaid */
+    .windows{position:absolute;inset:18px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:14px;padding:18px;z-index:8}
+    .window{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px;border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;cursor:pointer;transition:transform .25s ease, box-shadow .25s ease}
+    .window:hover{transform:translateY(-8px);box-shadow:0 20px 60px rgba(0,0,0,0.6),0 6px 18px rgba(74,144,226,0.06)}
+    .window .icon{font-size:22px;margin-bottom:6px}
+    .window .title{font-weight:700;color:#eaf6ff}
+    .window .desc{font-size:12px;color:var(--muted)}
+
+    /* Right column: mission control */
+    .right-col{display:flex;flex-direction:column;gap:14px}
+    .card-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .metric{font-family:monospace;font-weight:700;color:var(--accent)}
+
+    /* Orbit Tracker card */
+    .orbit-card{display:flex;flex-direction:column;gap:10px;padding:12px}
+    .orbit-canvas{width:100%;height:160px;border-radius:8px;background:transparent}
+    .orbit-meta{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);}
+
+    /* Cupola reference card */
+    .ref-card{display:flex;flex-direction:column;gap:8px;padding:12px}
+    .ref-thumb{width:100%;height:160px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 12px 30px rgba(0,0,0,0.5)}
+    .ref-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease}
+    .ref-thumb:hover img{transform:scale(1.04)}
+    .ref-meta{font-size:13px;color:var(--muted)}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.6),rgba(0,0,0,0.85));z-index:9999;padding:22px}
+    .modal.open{display:flex}
+    .modal-card{width:min(1100px,96%);max-height:92vh;overflow:auto;border-radius:12px;background:linear-gradient(180deg, rgba(8,12,16,0.98), rgba(2,6,10,0.98));border:1px solid rgba(255,255,255,0.04);padding:16px}
+    .modal-grid{display:grid;grid-template-columns:420px 1fr;gap:12px}
+    .modal-media{border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);min-height:320px;background:#000;display:flex;align-items:center;justify-content:center}
+    .modal-media img{width:100%;height:100%;object-fit:cover}
+    .meta{font-family:monospace;font-size:12px;color:var(--muted);margin-bottom:8px}
+    .story{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;color:#d7f5ff}
+
+    /* Settings panel inside right col */
+    .settings{display:grid;gap:8px}
+    .switch{display:flex;align-items:center;gap:8px}
+    .range{width:100%}
+
+    /* Responsive */
+    @media (max-width:1100px){
+      .container{grid-template-columns:1fr; padding:12px}
+      .right-col{order:2}
+    }
+    @media (max-width:520px){
+      .globe-wrap{width:300px;height:300px}
+      .stage{height:420px}
+      .orbit-canvas{height:120px}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand">
+      <a href="index.html" class="back-btn" ">
+                <span>←</span>
+                <!-- <span>Back to Menu</span> -->
+            </a>
+      <h1>ISS Cupola Experience</h1>
+      <div class="subtitle">Professional dashboard: Cupola views, live ISS orbit, narration, and advanced visuals</div>
+    </div>
+    <div style="margin-left:auto" class="small">Status: <span id="liveStatus">Initializing…</span></div>
+  </header>
+
+  <!-- Left: Cupola Experience -->
+  <section class="card cupola-area">
+    <div class="controls">
+      <button class="btn" id="ambientBtn">🔈 Ambient: Off</button>
+      <button class="btn" id="rotateBtn">⟳ Auto-rotate: On</button>
+      <button class="btn" id="lockBtn">🔒 Lock on ISS: Off</button>
+      <button class="btn" id="cloudsBtn">☁️ Clouds: Off</button>
+      <button class="btn" id="narrateBtn">🔊 Narration: Off</button>
+      <div style="margin-left:auto" class="small">Shortcuts: 1=Climate • 2=Aurora</div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="bg-stars"></div>
+      <div class="bg-cupola" aria-hidden="true"></div>
+
+      <div class="globe-wrap" id="globeWrap" aria-hidden="true">
+        <div class="globe" id="globe"></div>
+        <div class="terminator" id="terminator" aria-hidden="true"></div>
+        <div class="glow"></div>
+        <!-- ISS marker placed dynamically -->
+        <div class="iss-marker" id="issMarker" style="display:none">ISS</div>
+      </div>
+
+      <div class="windows" id="windows">
+        <div class="window" data-key="climate"><div class="icon">🌍</div><div class="title">Climate Monitoring</div><div class="desc">Global tracking</div></div>
+        <div class="window" data-key="aurora"><div class="icon">✨</div><div class="title">Aurora Research</div><div class="desc">Magnetosphere</div></div>
+        <div class="window" data-key="disaster"><div class="icon">🌀</div><div class="title">Disaster Response</div><div class="desc">Rapid mapping</div></div>
+        <div class="window" data-key="urban"><div class="icon">🏙️</div><div class="title">Urban Development</div><div class="desc">City growth</div></div>
+        <div class="window" data-key="ocean"><div class="icon">🌊</div><div class="title">Ocean Monitoring</div><div class="desc">Marine health</div></div>
+        <div class="window" data-key="space"><div class="icon">☀️</div><div class="title">Space Weather</div><div class="desc">Solar activity</div></div>
+        <div class="window" data-key="research"><div class="icon">🔬</div><div class="title">Scientific Research</div><div class="desc">Microgravity</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right column: Mission control (Orbit & Reference & Settings) -->
+  <aside class="right-col">
+    <!-- Orbit tracker card -->
+    <div class="card orbit-card">
+      <div class="card-title"><strong>Orbit Tracker</strong><span class="small" id="orbitTime">--</span></div>
+      <canvas class="orbit-canvas" id="orbitCanvas"></canvas>
+      <div class="orbit-meta">
+        <div>Lat: <span id="latVal">--</span></div>
+        <div>Lon: <span id="lonVal">--</span></div>
+        <div>Alt: <span id="altVal">--</span> km</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn" id="3dViewBtn">View 3D (beta)</button>
+        <button class="btn" id="centerBtn">Center Globe</button>
+      </div>
+    </div>
+
+    <!-- Cupola reference card -->
+    <div class="card ref-card">
+      <div class="card-title"><strong>Cupola Reference</strong><span class="small">Node 3 • Cupola</span></div>
+      <div class="ref-thumb"><img id="cupolaThumb" loading="lazy" src="https://www.nasa.gov/sites/default/files/thumbnails/image/iss063e021440.jpg" alt="Cupola interior"></div>
+      <div class="ref-meta">
+        The Cupola — a seven-window observatory on the ISS used for Earth observation and robotics operations. Press <em>View 360°</em> to open immersive imagery.
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" id="view360">View 360°</button>
+        <button class="btn" id="moreRef">More Info</button>
+      </div>
+    </div>
+
+    <!-- Settings card -->
+    <div class="card settings">
+      <div class="card-title"><strong>Settings</strong><span class="small">Customize experience</span></div>
+      <div class="switch"><label class="small">Theme</label>
+        <select id="themeSelect" class="btn" style="padding:6px 8px">
+          <option value="hybrid">Hybrid (default)</option>
+          <option value="nasa">NASA Realism</option>
+          <option value="sci">Futuristic Sci-Fi</option>
+        </select>
+      </div>
+      <div><label class="small">Ambient Volume</label><input id="volume" class="range" type="range" min="0" max="1" step="0.01" value="0.04"></div>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn" id="resetBtn">Reset View</button>
+        <button class="btn" id="exportBtn">Export Snapshot</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Modal (image + story) -->
+  <div class="modal" id="modal" aria-hidden="true" role="dialog">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div><h3 id="modalTitle" style="margin:0">Title</h3><div class="meta" id="modalMeta">Source: --</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="downloadBtn">⬇️ Download</button>
+          <button class="btn" id="closeModal">Close</button>
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-media" id="modalMedia"><span style="color:var(--muted)">Loading…</span></div>
+        <div>
+          <div style="margin-bottom:6px" class="small">Auto Story — contextual data</div>
+          <div class="story" id="modalStory">Story will appear here.</div>
+          <div style="margin-top:10px;color:var(--muted);font-size:13px">Live metrics</div>
+          <pre id="modalInsights" style="font-family:monospace;background:rgba(0,0,0,0.15);padding:10px;border-radius:8px;margin-top:8px;color:var(--muted)">--</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ========== Utilities & state ========== */
+  const state = {
+    ambientOn:false,
+    narrationOn:false,
+    autoRotate:true,
+    lockOnISS:false,
+    clouds:false,
+    theme:'hybrid',
+    volume:0.04
+  };
+
+  /* DOM refs */
+  const ambientBtn = document.getElementById('ambientBtn');
+  const rotateBtn = document.getElementById('rotateBtn');
+  const lockBtn = document.getElementById('lockBtn');
+  const cloudsBtn = document.getElementById('cloudsBtn');
+  const narrateBtn = document.getElementById('narrateBtn');
+  const themeSelect = document.getElementById('themeSelect');
+  const volumeSlider = document.getElementById('volume');
+  const globe = document.getElementById('globe');
+  const globeWrap = document.getElementById('globeWrap');
+  const issMarker = document.getElementById('issMarker');
+  const orbitCanvas = document.getElementById('orbitCanvas');
+  const octx = orbitCanvas.getContext('2d');
+  const latVal = document.getElementById('latVal');
+  const lonVal = document.getElementById('lonVal');
+  const altVal = document.getElementById('altVal');
+  const orbitTime = document.getElementById('orbitTime');
+  const liveStatus = document.getElementById('liveStatus');
+  const modal = document.getElementById('modal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMeta = document.getElementById('modalMeta');
+  const modalMedia = document.getElementById('modalMedia');
+  const modalStory = document.getElementById('modalStory');
+  const modalInsights = document.getElementById('modalInsights');
+
+  /* Window items */
+  const windows = Array.from(document.querySelectorAll('.window'));
+
+  /* Helper: safe fetch with timeout */
+  async function safeFetch(url, opts={}, timeout=8000){
+    const controller = new AbortController();
+    const id = setTimeout(()=>controller.abort(), timeout);
+    try{
+      const res = await fetch(url, {...opts, signal: controller.signal});
+      clearTimeout(id);
+      return res;
+    }catch(e){
+      clearTimeout(id);
+      return null;
+    }
+  }
+
+  /* ========== NASA Images fetch ========== */
+  async function fetchNasaImage(query){
+    try{
+      const res = await safeFetch(`https://images-api.nasa.gov/search?q=${encodeURIComponent(query)}&media_type=image`,{},8000);
+      if(!res) return null;
+      const json = await res.json();
+      const item = json.collection?.items?.find(i => i.links && i.links.length);
+      if(!item) return null;
+      const href = item.links[0].href;
+      const id = item.data?.[0]?.nasa_id || 'unknown';
+      const title = item.data?.[0]?.title || 'NASA Image';
+      return {href,id,title};
+    }catch(e){
+      console.warn('fetchNasaImage error', e);
+      return null;
+    }
+  }
+
+  /* ========== ISS live data ========== */
+  let latestISS = null;
+  async function fetchISS(){
+    try{
+      const r = await safeFetch('https://api.wheretheiss.at/v1/satellites/25544', {}, 7000);
+      if(!r) return null;
+      const j = await r.json();
+      latestISS = j;
+      liveStatus.textContent = 'Live';
+      return j;
+    }catch(e){
+      // fallback to simulated
+      liveStatus.textContent = 'Simulated';
+      const sim = {
+        latitude: (Math.random()*180-90),
+        longitude: (Math.random()*360-180),
+        altitude: (400 + Math.random()*30),
+        velocity: 7.66
+      };
+      latestISS = sim;
+      return sim;
+    }
+  }
+
+  /* update ISS every 5s */
+  async function updateISSLoop(){
+    const data = await fetchISS();
+    if(data){
+      latVal.textContent = Number(data.latitude).toFixed(3);
+      lonVal.textContent = Number(data.longitude).toFixed(3);
+      altVal.textContent = Number(data.altitude || data.altitude_km || data.altitude).toFixed(0);
+      orbitTime.textContent = new Date().toLocaleTimeString();
+      // move marker on globe if lockOnISS
+      if(state.lockOnISS) centerOnISS(data.latitude, data.longitude);
+      // update modal insights if open
+      if(modal.classList.contains('open')){
+        modalInsights.textContent = `Timestamp: ${new Date().toISOString()}\nLat: ${Number(data.latitude).toFixed(3)}\nLon: ${Number(data.longitude).toFixed(3)}\nAlt: ${Number(data.altitude).toFixed(0)} km\nVel: ${(data.velocity||7.66).toFixed(2)} km/s`;
+      }
+    }
+    setTimeout(updateISSLoop, 5000);
+  }
+  updateISSLoop();
+
+  /* ========== Globe & ISS marker mapping ========== */
+  /* Convert lat/lon to pixel position inside globeWrap (simple equirectangular mapping for demonstration) */
+  function latLonToXY(lat, lon){
+    const wrap = globeWrap.getBoundingClientRect();
+    const cx = wrap.width/2;
+    const cy = wrap.height/2;
+    // map lon [-180,180] -> x around circle, lat [-90,90] -> y
+    const x = cx + (lon/180) * (wrap.width/2) * 0.95;
+    const y = cy - (lat/90) * (wrap.height/2) * 0.55; // compressed lat effect
+    return {x,y};
+  }
+
+  function placeISSMarker(lat, lon){
+    const {x,y} = latLonToXY(lat, lon);
+    issMarker.style.left = `${x - issMarker.offsetWidth/2}px`;
+    issMarker.style.top = `${y - issMarker.offsetHeight/2}px`;
+    issMarker.style.display = 'flex';
+  }
+
+  /* center globe (scrolling/transform) — here we simulate by rotating globe background to approximate center */
+  function centerOnISS(lat, lon){
+    // rotate globe so lon is at center: adjust globe rotation via CSS transform
+    // we approximate: transform rotateZ by lon degrees
+    const rot = -lon;
+    globe.style.transform = `rotate(${rot}deg)`;
+    // place ISS marker after rotation (small timeout for layout)
+    setTimeout(()=> placeISSMarker(lat, lon), 100);
+  }
+
+  /* center button */
+  document.getElementById('centerBtn').addEventListener('click', ()=>{
+    if(latVal.textContent !== '--'){
+      const lat = parseFloat(latVal.textContent); const lon = parseFloat(lonVal.textContent);
+      centerOnISS(lat, lon);
+    }
+  });
+
+  /* ========== Orbit visual (canvas) ========== */
+  function resizeOrbit(){
+    orbitCanvas.width = orbitCanvas.clientWidth * devicePixelRatio;
+    orbitCanvas.height = orbitCanvas.clientHeight * devicePixelRatio;
+    octx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  resizeOrbit();
+  window.addEventListener('resize', resizeOrbit);
+
+  let t = 0;
+  function drawOrbit(){
+    const w = orbitCanvas.clientWidth;
+    const h = orbitCanvas.clientHeight;
+    octx.clearRect(0,0,w,h);
+    // curved path
+    octx.beginPath(); octx.lineWidth = 1.6; octx.strokeStyle = 'rgba(120,200,255,0.95)';
+    for(let x=0;x<w;x++){
+      const y = h/2 + Math.sin((x/w)*6 + t) * (h*0.3);
+      if(x===0) octx.moveTo(x,y); else octx.lineTo(x,y);
+    }
+    octx.stroke();
+    // satellite
+    const sx = (w/2) + Math.cos(t) * (w*0.36);
+    const sy = h/2 + Math.sin(t*1.4) * (h*0.24);
+    octx.fillStyle = 'rgba(255,255,255,0.95)'; octx.beginPath(); octx.arc(sx,sy,4,0,Math.PI*2); octx.fill();
+
+    // trail effect (simple)
+    t += 0.02;
+    requestAnimationFrame(drawOrbit);
+  }
+  drawOrbit();
+
+  /* ========== Ambient WebAudio (multi-layer) ========== */
+  let audioCtx=null, masterGain=null, ambientNodes={};
+  function startAmbient(){
+    if(audioCtx) return;
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    masterGain = audioCtx.createGain(); masterGain.gain.value = state.volume || 0.04; masterGain.connect(audioCtx.destination);
+
+    // base hum
+    const base = audioCtx.createOscillator(); base.type = 'sine'; base.frequency.value = 40;
+    const baseGain = audioCtx.createGain(); baseGain.gain.value = 0.02; base.connect(baseGain); baseGain.connect(masterGain);
+
+    // whoosh LFO-morphed oscillator
+    const o2 = audioCtx.createOscillator(); o2.type='sine'; o2.frequency.value=60;
+    const o2Gain = audioCtx.createGain(); o2Gain.gain.value = 0.01; o2.connect(o2Gain); o2Gain.connect(masterGain);
+    const lfo = audioCtx.createOscillator(); lfo.frequency.value = 0.08;
+    const lfoG = audioCtx.createGain(); lfoG.gain.value = 30; lfo.connect(lfoG); lfoG.connect(o2.frequency);
+
+    // subtle noise
+    const proc = audioCtx.createScriptProcessor(2048,1,1);
+    proc.onaudioprocess = (e)=>{
+      const out = e.outputBuffer.getChannelData(0);
+      for(let i=0;i<out.length;i++) out[i] = (Math.random()*2-1)*0.002;
+    };
+    proc.connect(masterGain);
+    base.start(); o2.start(); lfo.start();
+
+    ambientNodes = {base,o2,lfo,proc,baseGain,o2Gain};
+  }
+  function stopAmbient(){
+    if(!audioCtx) return;
+    try{
+      ambientNodes.base.stop(); ambientNodes.o2.stop(); ambientNodes.lfo.stop(); ambientNodes.proc.disconnect();
+    }catch(e){}
+    audioCtx.close(); audioCtx=null; ambientNodes={};
+  }
+  ambientBtn.addEventListener('click', ()=>{
+    state.ambientOn = !state.ambientOn; ambientBtn.textContent = state.ambientOn ? '🔊 Ambient: On' : '🔈 Ambient: Off';
+    if(state.ambientOn) startAmbient(); else stopAmbient();
+  });
+
+  /* volume control */
+  volumeSlider.addEventListener('input', (e)=>{
+    state.volume = Number(e.target.value);
+    if(masterGain) masterGain.gain.value = state.volume;
+  });
+
+  /* ========== Narration (SpeechSynthesis) ========== */
+  function speak(text, opts={rate:0.95, pitch:1.0}) {
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = opts.rate; utt.pitch = opts.pitch; utt.lang = 'en-US';
+    window.speechSynthesis.speak(utt);
+  }
+  narrateBtn.addEventListener('click', ()=>{
+    state.narrationOn = !state.narrationOn; narrateBtn.textContent = state.narrationOn ? '🔊 Narration: On' : '🔊 Narration: Off';
+  });
+
+  /* ========== Theme switcher ========== */
+  themeSelect.addEventListener('change', (e)=>{
+    state.theme = e.target.value;
+    applyTheme();
+  });
+  function applyTheme(){
+    if(state.theme === 'nasa'){
+      document.documentElement.style.setProperty('--accent','#3aa1ff');
+      document.documentElement.style.setProperty('--accent-2','#9fe0ff');
+      document.documentElement.style.setProperty('--panel','rgba(255,255,255,0.02)');
+      document.documentElement.style.setProperty('--muted','#9fb2bd');
+    } else if(state.theme === 'sci'){
+      document.documentElement.style.setProperty('--accent','#9b6bff');
+      document.documentElement.style.setProperty('--accent-2','#4ff7e3');
+      document.documentElement.style.setProperty('--panel','rgba(255,255,255,0.02)');
+      document.documentElement.style.setProperty('--muted','#cfc7ff');
+    } else {
+      // hybrid default
+      document.documentElement.style.setProperty('--accent','#4aa3ff');
+      document.documentElement.style.setProperty('--accent-2','#7bf0d6');
+      document.documentElement.style.setProperty('--panel','rgba(255,255,255,0.03)');
+      document.documentElement.style.setProperty('--muted','#9fb2bd');
+    }
+  }
+  applyTheme();
+
+  /* ========== Clouds toggle (optional overlay) ========== */
+  const cloudsBtnEl = document.getElementById('cloudsBtn');
+  cloudsBtnEl.addEventListener('click', ()=>{
+    state.clouds = !state.clouds;
+    cloudsBtnEl.textContent = state.clouds ? '☁️ Clouds: On' : '☁️ Clouds: Off';
+    if(state.clouds){
+      // add cloud overlay texture (public NASA Blue Marble tile)
+      globe.style.backgroundImage = "url('https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74474/earth_lrg.jpg'), linear-gradient(rgba(255,255,255,0.01), rgba(255,255,255,0.0))";
+      globe.style.backgroundBlendMode = 'overlay';
+    } else {
+      globe.style.backgroundImage = "url('https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74474/earth_lrg.jpg')";
+    }
+  });
+
+  /* ========== Windows click → modal with NASA image & story ========== */
+  const STORIES = {
+    climate: {title:'Climate Monitoring — Night Lights & Storms', template: m=>`From Cupola: city lights like constellations. Temperature anomaly ${m.deltaTemp}°C — indicators used for drought & flood planning.`},
+    aurora: {title:'Aurora Research — Curtains of Light', template: m=>`Auroral ovals shimmer; particle flux elevated. Instruments monitor charged particles to protect systems.`},
+    disaster: {title:'Disaster Response — Rapid Assessment', template: m=>`Imagery reveals impacted zones; rapid mapping helps prioritize rescue and logistics.`},
+    urban: {title:'Urban Growth — Night Light Patterns', template: m=>`Clusters of lights mark urban expansion. Temporal comparison reveals growth corridors.`},
+    ocean: {title:'Ocean Monitoring — Color & Currents', template: m=>`Surface color anomalies indicate algal blooms. Sea surface temp approx ${m.oceanTemp}°C.`},
+    space: {title:'Space Weather — Sun-Earth Connection', template: m=>`Solar activity affects ionosphere & comms; real-time monitoring helps operators.`},
+    research: {title:'Scientific Research — Experiments In View', template: m=>`Microgravity experiments complement Earth observation from this vantage.`}
+  };
+
+  async function openWindowModal(key){
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    const metrics = makeMetrics();
+    const s = STORIES[key] || STORIES.research;
+    modalTitle.textContent = s.title;
+    modalStory.textContent = s.template(metrics);
+    modalInsights.textContent = `Timestamp: ${new Date().toISOString()}\nLat: ${metrics.lat}\nLon: ${metrics.lon}\nΔT: ${metrics.deltaTemp} °C\nAltitude: ${metrics.alt} km`;
+
+    // fetch relevant NASA image
+    modalMedia.innerHTML = '<div style="color:var(--muted)">Fetching NASA image…</div>';
+    const qmap = { climate:'earth climate satellite', aurora:'aurora borealis', disaster:'flood wildfire satellite', urban:'city night lights', ocean:'ocean color satellite', space:'solar storm', research:'iss experiments' };
+    const q = qmap[key] || key;
+    const img = await fetchNasaImage(q);
+    if(img){
+      modalMedia.innerHTML = '';
+      const im = document.createElement('img'); im.src = img.href; im.alt = img.title; im.loading = 'lazy';
+      modalMedia.appendChild(im);
+      modalMeta.textContent = `NASA • ${img.id}`;
+      document.getElementById('downloadBtn').onclick = ()=>{ const a=document.createElement('a'); a.href = img.href; a.download = img.id + '.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
+    } else {
+      modalMedia.innerHTML = '<img src="https://www.nasa.gov/sites/default/files/thumbnails/image/iss063e021440.jpg" loading="lazy" alt="Cupola fallback">';
+      modalMeta.textContent = 'Cupola (fallback)';
+    }
+
+    if(state.narrationOn){
+      speak(s.template(metrics), {rate:0.95, pitch:1.0});
+    }
+  }
+
+  function closeModal(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    window.speechSynthesis.cancel();
+  }
+  document.getElementById('closeModal').addEventListener('click', closeModal);
+  modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+
+  windows.forEach(w => {
+    w.addEventListener('click', ()=> openWindowModal(w.dataset.key));
+  });
+
+  /* ========== makeMetrics (simulated or real if latestISS exists) ========== */
+  function makeMetrics(){
+    const now = new Date();
+    const lat = (latestISS?.latitude || (Math.random()*180-90)).toFixed(3);
+    const lon = (latestISS?.longitude || (Math.random()*360-180)).toFixed(3);
+    const deltaTemp = (Math.random()*6 - 2).toFixed(2);
+    const oceanTemp = (10 + Math.random()*20).toFixed(2);
+    const alt = Math.round(lat*0 + (latestISS?.altitude || (400 + Math.random()*30)));
+    return {now,lat,lon,deltaTemp,oceanTemp,alt};
+  }
+
+  /* ========== helper speak wrapper ========== */
+  function speak(text, opts={rate:0.95, pitch:1}){ if(!('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.rate=opts.rate; u.pitch=opts.pitch; u.lang='en-US'; window.speechSynthesis.speak(u); }
+
+  /* ========== keyboard shortcuts ========== */
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === '1') openWindowModal('climate');
+    if(e.key === '2') openWindowModal('aurora');
+  });
+
+  /* ========== lock on ISS toggle ========== */
+  lockBtn.addEventListener('click', ()=>{
+    state.lockOnISS = !state.lockOnISS; lockBtn.textContent = state.lockOnISS ? '🔒 Lock on ISS: On' : '🔒 Lock on ISS: Off';
+  });
+
+  /* ========== rotate toggle ========== */
+  rotateBtn.addEventListener('click', ()=>{
+    state.autoRotate = !state.autoRotate; rotateBtn.textContent = state.autoRotate ? '⟳ Auto-rotate: On' : '⟳ Auto-rotate: Off';
+    globe.style.animationPlayState = state.autoRotate ? 'running' : 'paused';
+  });
+
+  /* ========== view 3D & ref buttons (placeholders) ========== */
+  document.getElementById('3dViewBtn').addEventListener('click', ()=> alert('3D Orbit view (beta) — requires WebGL integration. I can add this next if you want.'));
+  document.getElementById('view360').addEventListener('click', ()=> open360());
+  document.getElementById('moreRef').addEventListener('click', ()=> window.open('https://www.nasa.gov/mission_pages/station/structure/elements/cupola.html','_blank'));
+
+  /* open 360 modal (simple new tab) */
+  function open360(){ window.open('https://images.nasa.gov/details-ISS063-E-21440', '_blank'); }
+
+  /* ========== export snapshot (canvas capture) ========== */
+  document.getElementById('exportBtn').addEventListener('click', async ()=>{
+    // render globeWrap area to canvas (simple html2canvas-style would be best, but here we do fallback)
+    alert('Snapshot export: browser capture not implemented inline. I can add html2canvas integration next.');
+  });
+
+  /* ========== quick reset view ========== */
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    globe.style.transform = '';
+    issMarker.style.display = 'none';
+    state.lockOnISS = false; lockBtn.textContent = '🔒 Lock on ISS: Off';
+  });
+
+  /* ========== resize handling for placing ISS marker ========== */
+  window.addEventListener('resize', ()=> { if(latVal.textContent!=='--') placeISSMarker(parseFloat(latVal.textContent), parseFloat(lonVal.textContent)); });
+
+  /* ========== Init safety: place marker approx center until live data arrives ========== */
+  function init(){
+    orbitTime.textContent = new Date().toLocaleTimeString();
+    liveStatus.textContent = 'Starting…';
+    // small simulated show
+    setTimeout(()=> liveStatus.textContent = 'Ready', 800);
+  }
+  init();
+
+  /* ========== Graceful note: you can enable more advanced features server-side ========== */
+  /*
+    Optional next steps (I can implement):
+    - WebGL 3D globe (three.js) with accurate ISS orbit markers and cloud tiles
+    - html2canvas snapshot export
+    - Server-side OpenAI story generation (secure) to replace local templates
+    - Gallery paging inside modal, caching NASA images per topic
+  */
+
+</script>
+</body>
+</html>
